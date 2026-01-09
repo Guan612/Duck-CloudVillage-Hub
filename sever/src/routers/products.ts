@@ -35,6 +35,9 @@ productsRotter.post("/", async (c) => {
     return c.json({ error: z.flattenError(req.error) }, 400);
   }
 
-  
+
 
 });
+
+
+export default productsRotter
