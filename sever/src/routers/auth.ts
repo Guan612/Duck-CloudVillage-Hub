@@ -1,9 +1,11 @@
 import { Hono } from "hono";
 import { sign } from "hono/jwt";
-import { insertUserSchema, loginSchema, users } from "../db/schema";
+import { users } from "../db/schema";
 import { db } from "../db";
 import { eq } from "drizzle-orm";
 import { appConfig } from "../config";
+import { insertUserSchema, loginSchema } from "../validators";
+import z from "zod";
 
 const authRouter = new Hono();
 
@@ -12,31 +14,27 @@ authRouter.post("/login", async (c) => {
   const req = loginSchema.safeParse(body);
 
   if (!req.success) {
-    return c.json({ error: req.error }, 400);
+    return c.json({ error: z.flattenError(req.error) }, 400);
   }
-  const user = await db
-    .select()
-    .from(users)
-    .where(eq(users.loginId, req.data.loginId))
-    .execute();
+  const user = await db.query.users.findFirst({
+    where: eq(users.loginId, req.data.loginId),
+  });
 
-  if (user.length === 0) {
+  if (!user) {
     return c.json({ error: "用户名或密码错误" }, 401);
   }
 
-  const isMatch = await Bun.password.verify(
-    req.data.password,
-    user[0].password,
-  );
+  const isMatch = await Bun.password.verify(req.data.password, user.password);
 
   if (!isMatch) {
     return c.json({ error: "用户名或密码错误" }, 400);
   }
 
   const payload = {
-    sub: user[0].id, // Subject: 用户ID (标准字段)
-    role: user[0].role, // Role: 存入角色，方便前端和后端中间件判断权限
-    name: user[0].nickname, // 可选：存入昵称，前端解析后可直接显示
+    userId: user.id, // Subject: 用户ID (标准字段)
+    loginId: user.loginId,
+    role: user.role, // Role: 存入角色，方便前端和后端中间件判断权限
+    name: user.nickname, // 可选：存入昵称，前端解析后可直接显示
     exp: Math.floor(Date.now() / 1000) + appConfig.jwt.expiresIn,
   };
 
@@ -45,11 +43,11 @@ authRouter.post("/login", async (c) => {
   return c.json({
     token: token,
     user: {
-      id: user[0].id,
-      loginId: user[0].loginId,
-      nickname: user[0].nickname,
-      role: user[0].role,
-      avatarUrl: user[0].avatarUrl,
+      id: user.id,
+      loginId: user.loginId,
+      nickname: user.nickname,
+      role: user.role,
+      avatarUrl: user.avatarUrl,
     },
   });
 });
@@ -60,15 +58,14 @@ authRouter.post("/register", async (c) => {
   const req = insertUserSchema.safeParse(body);
 
   if (!req.success) {
-    return c.json({ error: req.error }, 400);
+    return c.json({ error: z.flattenError(req.error) }, 400);
   }
 
-  const isUser = await db
-    .select()
-    .from(users)
-    .where(eq(users.loginId, req.data.loginId));
+  const isUser = await db.query.users.findFirst({
+    where: eq(users.loginId, req.data.loginId),
+  });
 
-  if (isUser.length > 0) {
+  if (isUser) {
     return c.json({ error: "用户已经注册" }, 409);
   }
 
