@@ -27,7 +27,7 @@ export const insertUserSchema = createInsertSchema(users, {
     schema.min(3, "账号至少需要3个字符").max(20, "账号不能超过20个字符"),
   password: (schema) => schema.min(6, "密码至少需要6位"),
   nickname: (schema) => schema.max(20, "昵称过长"),
-  avatarUrl: (schema) => schema.min(3, "头像必须是合法的URL"),
+  avatarUrl: (_) => z.url().min(3, "头像必须是合法的URL"),
   role: (schema) => schema.int().min(0).max(2), // 限制角色范围 0-2
   balance: (schema) => schema.int().nonnegative("余额不能为负数"),
 }).omit({
@@ -103,7 +103,14 @@ export const insertProductSchema = createInsertSchema(products, {
   name: (schema) => schema.min(1, "商品名称不能为空"),
   price: (schema) => schema.int().positive("价格必须大于0"), // 价格必须是正整数
   quantity: (schema) => schema.int().nonnegative("库存不能为负数"),
-  imgUrl: (schema) => schema.url().optional().or(z.literal("")), // 允许空字符串或URL
+  imgUrl: (_) =>
+    z
+      .union([
+        z.url(), // 必须是合法 URL
+        z.literal(""), // 或者 是空字符串
+      ])
+      .optional() // 允许前端不传 (undefined)
+      .nullable(), // 允许传 null (对应数据库的 varchar nullable)
   status: (schema) => schema.int().min(0).max(2), // 0, 1, 2
 }).omit({
   createdAt: true,
