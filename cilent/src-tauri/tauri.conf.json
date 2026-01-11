@@ -1,6 +1,6 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "cilent",
+  "productName": "云上乡村",
   "version": "0.1.0",
   "identifier": "com.duck.cloudvillage.hub",
   "build": {
@@ -12,9 +12,9 @@
   "app": {
     "windows": [
       {
-        "title": "cilent",
-        "width": 800,
-        "height": 600
+        "title": "云上乡村",
+        "width": 350,
+        "height": 700
       }
     ],
     "security": {
