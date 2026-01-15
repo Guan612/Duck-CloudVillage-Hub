@@ -44,16 +44,19 @@ authRouter.post("/login", async (c) => {
   const token = await sign(payload, appConfig.jwt.secret);
 
   return c.json(
-    success(t("auth.login_success"), {
-      token: token,
-      user: {
-        id: user.id,
-        loginId: user.loginId,
-        nickname: user.nickname,
-        role: user.role,
-        avatarUrl: user.avatarUrl,
+    success(
+      {
+        token: token,
+        user: {
+          id: user.id,
+          loginId: user.loginId,
+          nickname: user.nickname,
+          role: user.role,
+          avatarUrl: user.avatarUrl,
+        },
       },
-    }),
+      t("auth.login_success"),
+    ),
   );
 });
 
@@ -92,7 +95,7 @@ authRouter.post("/register", async (c) => {
       createdAt: users.createdAt,
     });
 
-  return c.json(newUser);
+  return c.json(success(newUser));
 });
 
 export default authRouter;

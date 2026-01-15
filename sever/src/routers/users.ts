@@ -6,6 +6,8 @@ import { jwt, verify } from "hono/jwt";
 import { appConfig } from "../config";
 import { updateUsersSchema } from "../validators";
 import z from "zod";
+import { fail, success } from "../utils/result";
+import { useTranslation } from "@intlify/hono";
 
 const userRouter = new Hono();
 
@@ -29,7 +31,7 @@ userRouter.get("/", async (c) => {
       // 没写 password，它就不会被查出来
     },
   });
-  return c.json(res);
+  return c.json(success(res));
 });
 
 userRouter.get("/:id", async (c) => {
@@ -47,16 +49,17 @@ userRouter.get("/:id", async (c) => {
       updatedAt: true,
     },
   });
-  return c.json(res);
+  return c.json(success(res));
 });
 
 userRouter.patch("/", async (c) => {
   const payload = c.get("jwtPayload");
   const { userId } = payload;
+  const t = await useTranslation(c);
   const body = await c.req.json();
   const req = updateUsersSchema.safeParse(body);
   if (!req.success) {
-    return c.json({ error: z.flattenError(req.error) }, 400);
+    return c.json(fail(t("param_error"), z.flattenError(req.error)), 400);
   }
 
   const data = req.data;
