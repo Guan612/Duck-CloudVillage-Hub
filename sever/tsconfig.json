@@ -1,9 +1,13 @@
 {
   "compilerOptions": {
     "target": "es6",
-    "module": "commonjs",
+    "module": "preserve",
     "strict": true,
+    "resolveJsonModule": true,
+    "esModuleInterop": true,
+    "moduleResolution": "bundler",
     "jsx": "react-jsx",
-    "jsxImportSource": "hono/jsx"
-  }
+    "jsxImportSource": "hono/jsx",
+  },
+  "include": ["src/**/*", "src/types/**/*.ts"]
 }
