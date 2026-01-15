@@ -111,11 +111,13 @@ export const insertProductSchema = createInsertSchema(products, {
       ])
       .optional() // 允许前端不传 (undefined)
       .nullable(), // 允许传 null (对应数据库的 varchar nullable)
-  status: (schema) => schema.int().min(0).max(2), // 0, 1, 2
+  //status: (schema) => schema.int().min(0).max(2), // 0, 1, 2
 }).omit({
   createdAt: true,
   updatedAt: true,
 });
+
+export const updateProductSchema = insertProductSchema.partial();
 
 // =========================================
 // 3. Carts (购物车)
@@ -138,7 +140,7 @@ export const selectOrderSchema = createSelectSchema(orders);
 
 export const insertOrderSchema = createInsertSchema(orders, {
   totalPrice: (schema) => schema.int().nonnegative(),
-  status: (schema) => schema.int().min(0).max(3),
+  //status: (schema) => schema.int().min(0).max(3),
 }).omit({
   createdAt: true,
   updatedAt: true,
@@ -196,6 +198,3 @@ export const insertFeedbackSchema = createInsertSchema(feedbacks, {
 // =========================================
 // 如果你需要做 "修改个人资料" 或 "修改商品" 的接口，
 // 通常需要 partial()，因为更新时不需要传所有字段。
-
-export const patchUserSchema = insertUserSchema.partial();
-export const patchProductSchema = insertProductSchema.partial();
