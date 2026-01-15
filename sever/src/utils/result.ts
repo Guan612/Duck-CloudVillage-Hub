@@ -15,8 +15,8 @@ export interface ApiResponse<T = any> {
  * @param msg 提示信息 (默认: "操作成功")
  */
 export const success = <T>(
-  msg: string = "操作成功",
   data: T,
+  msg: string = "操作成功",
 ): ApiResponse<T> => {
   return {
     code: 0,
