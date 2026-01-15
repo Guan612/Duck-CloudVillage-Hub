@@ -6,6 +6,8 @@ import { eq } from "drizzle-orm";
 import { appConfig } from "../config";
 import { insertUserSchema, loginSchema } from "../validators";
 import z from "zod";
+import { fail, success } from "../utils/result";
+import { Msg } from "../utils/msg";
 
 const authRouter = new Hono();
 
@@ -14,20 +16,20 @@ authRouter.post("/login", async (c) => {
   const req = loginSchema.safeParse(body);
 
   if (!req.success) {
-    return c.json({ error: z.flattenError(req.error) }, 400);
+    return c.json(fail(Msg.PARAM_ERROR, z.flattenError(req.error)), 400);
   }
   const user = await db.query.users.findFirst({
     where: eq(users.loginId, req.data.loginId),
   });
 
   if (!user) {
-    return c.json({ error: "用户名或密码错误" }, 401);
+    return c.json(fail(Msg.LOGIN_ERROR), 401);
   }
 
   const isMatch = await Bun.password.verify(req.data.password, user.password);
 
   if (!isMatch) {
-    return c.json({ error: "用户名或密码错误" }, 400);
+    return c.json(fail(Msg.LOGIN_ERROR), 400);
   }
 
   const payload = {
@@ -40,16 +42,18 @@ authRouter.post("/login", async (c) => {
 
   const token = await sign(payload, appConfig.jwt.secret);
 
-  return c.json({
-    token: token,
-    user: {
-      id: user.id,
-      loginId: user.loginId,
-      nickname: user.nickname,
-      role: user.role,
-      avatarUrl: user.avatarUrl,
-    },
-  });
+  return c.json(
+    success("登录成功", {
+      token: token,
+      user: {
+        id: user.id,
+        loginId: user.loginId,
+        nickname: user.nickname,
+        role: user.role,
+        avatarUrl: user.avatarUrl,
+      },
+    }),
+  );
 });
 
 authRouter.post("/register", async (c) => {
@@ -58,7 +62,7 @@ authRouter.post("/register", async (c) => {
   const req = insertUserSchema.safeParse(body);
 
   if (!req.success) {
-    return c.json({ error: z.flattenError(req.error) }, 400);
+    return c.json(fail(Msg.PARAM_ERROR, z.flattenError(req.error)), 400);
   }
 
   const isUser = await db.query.users.findFirst({
@@ -66,7 +70,7 @@ authRouter.post("/register", async (c) => {
   });
 
   if (isUser) {
-    return c.json({ error: "用户已经注册" }, 409);
+    return c.json(fail("用户已经存在，请登录"), 409);
   }
 
   const hashedPassword = await Bun.password.hash(req.data.password);
