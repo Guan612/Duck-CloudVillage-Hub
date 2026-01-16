@@ -11,8 +11,13 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as LayoutRouteImport } from './routes/_layout'
 import { Route as LayoutIndexRouteImport } from './routes/_layout/index'
+import { Route as ProductProductIdRouteImport } from './routes/product/$productId'
+import { Route as FeedbackAddFeedbackRouteImport } from './routes/feedback/addFeedback'
+import { Route as FeedbackFeedbackIdRouteImport } from './routes/feedback/$feedbackId'
 import { Route as AuthLoginRouteImport } from './routes/auth/login'
+import { Route as LayoutProductIndexRouteImport } from './routes/_layout/product/index'
 import { Route as LayoutMeIndexRouteImport } from './routes/_layout/me/index'
+import { Route as LayoutFeedbackIndexRouteImport } from './routes/_layout/feedback/index'
 import { Route as LayoutAboutIndexRouteImport } from './routes/_layout/about/index'
 
 const LayoutRoute = LayoutRouteImport.update({
@@ -24,14 +29,39 @@ const LayoutIndexRoute = LayoutIndexRouteImport.update({
   path: '/',
   getParentRoute: () => LayoutRoute,
 } as any)
+const ProductProductIdRoute = ProductProductIdRouteImport.update({
+  id: '/product/$productId',
+  path: '/product/$productId',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FeedbackAddFeedbackRoute = FeedbackAddFeedbackRouteImport.update({
+  id: '/feedback/addFeedback',
+  path: '/feedback/addFeedback',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FeedbackFeedbackIdRoute = FeedbackFeedbackIdRouteImport.update({
+  id: '/feedback/$feedbackId',
+  path: '/feedback/$feedbackId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthLoginRoute = AuthLoginRouteImport.update({
   id: '/auth/login',
   path: '/auth/login',
   getParentRoute: () => rootRouteImport,
 } as any)
+const LayoutProductIndexRoute = LayoutProductIndexRouteImport.update({
+  id: '/product/',
+  path: '/product/',
+  getParentRoute: () => LayoutRoute,
+} as any)
 const LayoutMeIndexRoute = LayoutMeIndexRouteImport.update({
   id: '/me/',
   path: '/me/',
+  getParentRoute: () => LayoutRoute,
+} as any)
+const LayoutFeedbackIndexRoute = LayoutFeedbackIndexRouteImport.update({
+  id: '/feedback/',
+  path: '/feedback/',
   getParentRoute: () => LayoutRoute,
 } as any)
 const LayoutAboutIndexRoute = LayoutAboutIndexRouteImport.update({
@@ -42,41 +72,82 @@ const LayoutAboutIndexRoute = LayoutAboutIndexRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/auth/login': typeof AuthLoginRoute
+  '/feedback/$feedbackId': typeof FeedbackFeedbackIdRoute
+  '/feedback/addFeedback': typeof FeedbackAddFeedbackRoute
+  '/product/$productId': typeof ProductProductIdRoute
   '/': typeof LayoutIndexRoute
   '/about': typeof LayoutAboutIndexRoute
+  '/feedback': typeof LayoutFeedbackIndexRoute
   '/me': typeof LayoutMeIndexRoute
+  '/product': typeof LayoutProductIndexRoute
 }
 export interface FileRoutesByTo {
   '/auth/login': typeof AuthLoginRoute
+  '/feedback/$feedbackId': typeof FeedbackFeedbackIdRoute
+  '/feedback/addFeedback': typeof FeedbackAddFeedbackRoute
+  '/product/$productId': typeof ProductProductIdRoute
   '/': typeof LayoutIndexRoute
   '/about': typeof LayoutAboutIndexRoute
+  '/feedback': typeof LayoutFeedbackIndexRoute
   '/me': typeof LayoutMeIndexRoute
+  '/product': typeof LayoutProductIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_layout': typeof LayoutRouteWithChildren
   '/auth/login': typeof AuthLoginRoute
+  '/feedback/$feedbackId': typeof FeedbackFeedbackIdRoute
+  '/feedback/addFeedback': typeof FeedbackAddFeedbackRoute
+  '/product/$productId': typeof ProductProductIdRoute
   '/_layout/': typeof LayoutIndexRoute
   '/_layout/about/': typeof LayoutAboutIndexRoute
+  '/_layout/feedback/': typeof LayoutFeedbackIndexRoute
   '/_layout/me/': typeof LayoutMeIndexRoute
+  '/_layout/product/': typeof LayoutProductIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/auth/login' | '/' | '/about' | '/me'
+  fullPaths:
+    | '/auth/login'
+    | '/feedback/$feedbackId'
+    | '/feedback/addFeedback'
+    | '/product/$productId'
+    | '/'
+    | '/about'
+    | '/feedback'
+    | '/me'
+    | '/product'
   fileRoutesByTo: FileRoutesByTo
-  to: '/auth/login' | '/' | '/about' | '/me'
+  to:
+    | '/auth/login'
+    | '/feedback/$feedbackId'
+    | '/feedback/addFeedback'
+    | '/product/$productId'
+    | '/'
+    | '/about'
+    | '/feedback'
+    | '/me'
+    | '/product'
   id:
     | '__root__'
     | '/_layout'
     | '/auth/login'
+    | '/feedback/$feedbackId'
+    | '/feedback/addFeedback'
+    | '/product/$productId'
     | '/_layout/'
     | '/_layout/about/'
+    | '/_layout/feedback/'
     | '/_layout/me/'
+    | '/_layout/product/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   LayoutRoute: typeof LayoutRouteWithChildren
   AuthLoginRoute: typeof AuthLoginRoute
+  FeedbackFeedbackIdRoute: typeof FeedbackFeedbackIdRoute
+  FeedbackAddFeedbackRoute: typeof FeedbackAddFeedbackRoute
+  ProductProductIdRoute: typeof ProductProductIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -95,6 +166,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LayoutIndexRouteImport
       parentRoute: typeof LayoutRoute
     }
+    '/product/$productId': {
+      id: '/product/$productId'
+      path: '/product/$productId'
+      fullPath: '/product/$productId'
+      preLoaderRoute: typeof ProductProductIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/feedback/addFeedback': {
+      id: '/feedback/addFeedback'
+      path: '/feedback/addFeedback'
+      fullPath: '/feedback/addFeedback'
+      preLoaderRoute: typeof FeedbackAddFeedbackRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/feedback/$feedbackId': {
+      id: '/feedback/$feedbackId'
+      path: '/feedback/$feedbackId'
+      fullPath: '/feedback/$feedbackId'
+      preLoaderRoute: typeof FeedbackFeedbackIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/auth/login': {
       id: '/auth/login'
       path: '/auth/login'
@@ -102,11 +194,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthLoginRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_layout/product/': {
+      id: '/_layout/product/'
+      path: '/product'
+      fullPath: '/product'
+      preLoaderRoute: typeof LayoutProductIndexRouteImport
+      parentRoute: typeof LayoutRoute
+    }
     '/_layout/me/': {
       id: '/_layout/me/'
       path: '/me'
       fullPath: '/me'
       preLoaderRoute: typeof LayoutMeIndexRouteImport
+      parentRoute: typeof LayoutRoute
+    }
+    '/_layout/feedback/': {
+      id: '/_layout/feedback/'
+      path: '/feedback'
+      fullPath: '/feedback'
+      preLoaderRoute: typeof LayoutFeedbackIndexRouteImport
       parentRoute: typeof LayoutRoute
     }
     '/_layout/about/': {
@@ -122,13 +228,17 @@ declare module '@tanstack/react-router' {
 interface LayoutRouteChildren {
   LayoutIndexRoute: typeof LayoutIndexRoute
   LayoutAboutIndexRoute: typeof LayoutAboutIndexRoute
+  LayoutFeedbackIndexRoute: typeof LayoutFeedbackIndexRoute
   LayoutMeIndexRoute: typeof LayoutMeIndexRoute
+  LayoutProductIndexRoute: typeof LayoutProductIndexRoute
 }
 
 const LayoutRouteChildren: LayoutRouteChildren = {
   LayoutIndexRoute: LayoutIndexRoute,
   LayoutAboutIndexRoute: LayoutAboutIndexRoute,
+  LayoutFeedbackIndexRoute: LayoutFeedbackIndexRoute,
   LayoutMeIndexRoute: LayoutMeIndexRoute,
+  LayoutProductIndexRoute: LayoutProductIndexRoute,
 }
 
 const LayoutRouteWithChildren =
@@ -137,6 +247,9 @@ const LayoutRouteWithChildren =
 const rootRouteChildren: RootRouteChildren = {
   LayoutRoute: LayoutRouteWithChildren,
   AuthLoginRoute: AuthLoginRoute,
+  FeedbackFeedbackIdRoute: FeedbackFeedbackIdRoute,
+  FeedbackAddFeedbackRoute: FeedbackAddFeedbackRoute,
+  ProductProductIdRoute: ProductProductIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
