@@ -1,12 +1,11 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { requireAuth } from "@/hooks/auth/useAuthGurad";
 import { cn } from "@/lib/utils";
 import { themeAtom } from "@/store";
 import { tokenAtom, userInfoAtom } from "@/store/auth";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import {
   CalendarCheck,
@@ -27,6 +26,7 @@ export const Route = createFileRoute("/_layout/me/")({
 function RouteComponent() {
   const [userInfo, setUserInfo] = useAtom(userInfoAtom);
   const setToken = useSetAtom(tokenAtom);
+  const navigate = useNavigate();
   const [theme, setTheme] = useAtom(themeAtom);
   const logout = () => {
     setToken(null);
@@ -69,7 +69,7 @@ function RouteComponent() {
                 size="sm"
                 className={`h-8 px-3 rounded-full text-xs font-bold shadow-sm`}
                 //variant={userInfo.isSignedIn ? "ghost" : "default"}
-                onClick={() => alert("签到成功！积分 +10")}
+                onClick={() => navigate({ to: "/me/editUserInfo" })}
               >
                 <Edit2 size={14} className="mr-1" />
                 编辑个人信息
