@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Search, Filter, ShoppingBag, Coins } from "lucide-react";
+import { Search, Filter, ShoppingBag, Coins, ShoppingCart } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -135,6 +135,13 @@ function ProductListPage() {
           - 更多好物正在上架中 -
         </div>
       </div>
+
+      <Link
+        to="/cart"
+        className="fixed bottom-24 right-4 md:right-12 h-12 w-12 rounded-full bg-primary text-primary-foreground shadow-lg flex items-center justify-center active:scale-90 transition-transform z-20"
+      >
+        <ShoppingCart size={24} />
+      </Link>
     </div>
   );
 }
