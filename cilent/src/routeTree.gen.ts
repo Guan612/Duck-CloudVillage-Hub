@@ -9,25 +9,26 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as SubRouteImport } from './routes/_sub'
 import { Route as LayoutRouteImport } from './routes/_layout'
-import { Route as CartIndexRouteImport } from './routes/cart/index'
 import { Route as LayoutIndexRouteImport } from './routes/_layout/index'
-import { Route as ProductProductIdRouteImport } from './routes/product/$productId'
-import { Route as FeedbackAddFeedbackRouteImport } from './routes/feedback/addFeedback'
-import { Route as FeedbackFeedbackIdRouteImport } from './routes/feedback/$feedbackId'
 import { Route as AuthLoginRouteImport } from './routes/auth/login'
+import { Route as SubCartIndexRouteImport } from './routes/_sub/cart/index'
 import { Route as LayoutProductIndexRouteImport } from './routes/_layout/product/index'
 import { Route as LayoutMeIndexRouteImport } from './routes/_layout/me/index'
 import { Route as LayoutFeedbackIndexRouteImport } from './routes/_layout/feedback/index'
 import { Route as LayoutAboutIndexRouteImport } from './routes/_layout/about/index'
+import { Route as SubProductProductIdRouteImport } from './routes/_sub/product/$productId'
+import { Route as SubMeEditUserInfoRouteImport } from './routes/_sub/me/editUserInfo'
+import { Route as SubFeedbackAddFeedbackRouteImport } from './routes/_sub/feedback/addFeedback'
+import { Route as SubFeedbackFeedbackIdRouteImport } from './routes/_sub/feedback/$feedbackId'
 
-const LayoutRoute = LayoutRouteImport.update({
-  id: '/_layout',
+const SubRoute = SubRouteImport.update({
+  id: '/_sub',
   getParentRoute: () => rootRouteImport,
 } as any)
-const CartIndexRoute = CartIndexRouteImport.update({
-  id: '/cart/',
-  path: '/cart/',
+const LayoutRoute = LayoutRouteImport.update({
+  id: '/_layout',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LayoutIndexRoute = LayoutIndexRouteImport.update({
@@ -35,25 +36,15 @@ const LayoutIndexRoute = LayoutIndexRouteImport.update({
   path: '/',
   getParentRoute: () => LayoutRoute,
 } as any)
-const ProductProductIdRoute = ProductProductIdRouteImport.update({
-  id: '/product/$productId',
-  path: '/product/$productId',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const FeedbackAddFeedbackRoute = FeedbackAddFeedbackRouteImport.update({
-  id: '/feedback/addFeedback',
-  path: '/feedback/addFeedback',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const FeedbackFeedbackIdRoute = FeedbackFeedbackIdRouteImport.update({
-  id: '/feedback/$feedbackId',
-  path: '/feedback/$feedbackId',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const AuthLoginRoute = AuthLoginRouteImport.update({
   id: '/auth/login',
   path: '/auth/login',
   getParentRoute: () => rootRouteImport,
+} as any)
+const SubCartIndexRoute = SubCartIndexRouteImport.update({
+  id: '/cart/',
+  path: '/cart/',
+  getParentRoute: () => SubRoute,
 } as any)
 const LayoutProductIndexRoute = LayoutProductIndexRouteImport.update({
   id: '/product/',
@@ -75,108 +66,133 @@ const LayoutAboutIndexRoute = LayoutAboutIndexRouteImport.update({
   path: '/about/',
   getParentRoute: () => LayoutRoute,
 } as any)
+const SubProductProductIdRoute = SubProductProductIdRouteImport.update({
+  id: '/product/$productId',
+  path: '/product/$productId',
+  getParentRoute: () => SubRoute,
+} as any)
+const SubMeEditUserInfoRoute = SubMeEditUserInfoRouteImport.update({
+  id: '/me/editUserInfo',
+  path: '/me/editUserInfo',
+  getParentRoute: () => SubRoute,
+} as any)
+const SubFeedbackAddFeedbackRoute = SubFeedbackAddFeedbackRouteImport.update({
+  id: '/feedback/addFeedback',
+  path: '/feedback/addFeedback',
+  getParentRoute: () => SubRoute,
+} as any)
+const SubFeedbackFeedbackIdRoute = SubFeedbackFeedbackIdRouteImport.update({
+  id: '/feedback/$feedbackId',
+  path: '/feedback/$feedbackId',
+  getParentRoute: () => SubRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/auth/login': typeof AuthLoginRoute
-  '/feedback/$feedbackId': typeof FeedbackFeedbackIdRoute
-  '/feedback/addFeedback': typeof FeedbackAddFeedbackRoute
-  '/product/$productId': typeof ProductProductIdRoute
   '/': typeof LayoutIndexRoute
-  '/cart': typeof CartIndexRoute
+  '/feedback/$feedbackId': typeof SubFeedbackFeedbackIdRoute
+  '/feedback/addFeedback': typeof SubFeedbackAddFeedbackRoute
+  '/me/editUserInfo': typeof SubMeEditUserInfoRoute
+  '/product/$productId': typeof SubProductProductIdRoute
   '/about': typeof LayoutAboutIndexRoute
   '/feedback': typeof LayoutFeedbackIndexRoute
   '/me': typeof LayoutMeIndexRoute
   '/product': typeof LayoutProductIndexRoute
+  '/cart': typeof SubCartIndexRoute
 }
 export interface FileRoutesByTo {
   '/auth/login': typeof AuthLoginRoute
-  '/feedback/$feedbackId': typeof FeedbackFeedbackIdRoute
-  '/feedback/addFeedback': typeof FeedbackAddFeedbackRoute
-  '/product/$productId': typeof ProductProductIdRoute
   '/': typeof LayoutIndexRoute
-  '/cart': typeof CartIndexRoute
+  '/feedback/$feedbackId': typeof SubFeedbackFeedbackIdRoute
+  '/feedback/addFeedback': typeof SubFeedbackAddFeedbackRoute
+  '/me/editUserInfo': typeof SubMeEditUserInfoRoute
+  '/product/$productId': typeof SubProductProductIdRoute
   '/about': typeof LayoutAboutIndexRoute
   '/feedback': typeof LayoutFeedbackIndexRoute
   '/me': typeof LayoutMeIndexRoute
   '/product': typeof LayoutProductIndexRoute
+  '/cart': typeof SubCartIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_layout': typeof LayoutRouteWithChildren
+  '/_sub': typeof SubRouteWithChildren
   '/auth/login': typeof AuthLoginRoute
-  '/feedback/$feedbackId': typeof FeedbackFeedbackIdRoute
-  '/feedback/addFeedback': typeof FeedbackAddFeedbackRoute
-  '/product/$productId': typeof ProductProductIdRoute
   '/_layout/': typeof LayoutIndexRoute
-  '/cart/': typeof CartIndexRoute
+  '/_sub/feedback/$feedbackId': typeof SubFeedbackFeedbackIdRoute
+  '/_sub/feedback/addFeedback': typeof SubFeedbackAddFeedbackRoute
+  '/_sub/me/editUserInfo': typeof SubMeEditUserInfoRoute
+  '/_sub/product/$productId': typeof SubProductProductIdRoute
   '/_layout/about/': typeof LayoutAboutIndexRoute
   '/_layout/feedback/': typeof LayoutFeedbackIndexRoute
   '/_layout/me/': typeof LayoutMeIndexRoute
   '/_layout/product/': typeof LayoutProductIndexRoute
+  '/_sub/cart/': typeof SubCartIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/auth/login'
+    | '/'
     | '/feedback/$feedbackId'
     | '/feedback/addFeedback'
+    | '/me/editUserInfo'
     | '/product/$productId'
-    | '/'
-    | '/cart'
     | '/about'
     | '/feedback'
     | '/me'
     | '/product'
+    | '/cart'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/auth/login'
+    | '/'
     | '/feedback/$feedbackId'
     | '/feedback/addFeedback'
+    | '/me/editUserInfo'
     | '/product/$productId'
-    | '/'
-    | '/cart'
     | '/about'
     | '/feedback'
     | '/me'
     | '/product'
+    | '/cart'
   id:
     | '__root__'
     | '/_layout'
+    | '/_sub'
     | '/auth/login'
-    | '/feedback/$feedbackId'
-    | '/feedback/addFeedback'
-    | '/product/$productId'
     | '/_layout/'
-    | '/cart/'
+    | '/_sub/feedback/$feedbackId'
+    | '/_sub/feedback/addFeedback'
+    | '/_sub/me/editUserInfo'
+    | '/_sub/product/$productId'
     | '/_layout/about/'
     | '/_layout/feedback/'
     | '/_layout/me/'
     | '/_layout/product/'
+    | '/_sub/cart/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   LayoutRoute: typeof LayoutRouteWithChildren
+  SubRoute: typeof SubRouteWithChildren
   AuthLoginRoute: typeof AuthLoginRoute
-  FeedbackFeedbackIdRoute: typeof FeedbackFeedbackIdRoute
-  FeedbackAddFeedbackRoute: typeof FeedbackAddFeedbackRoute
-  ProductProductIdRoute: typeof ProductProductIdRoute
-  CartIndexRoute: typeof CartIndexRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/_sub': {
+      id: '/_sub'
+      path: ''
+      fullPath: ''
+      preLoaderRoute: typeof SubRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_layout': {
       id: '/_layout'
       path: ''
       fullPath: ''
       preLoaderRoute: typeof LayoutRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/cart/': {
-      id: '/cart/'
-      path: '/cart'
-      fullPath: '/cart'
-      preLoaderRoute: typeof CartIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_layout/': {
@@ -186,33 +202,19 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LayoutIndexRouteImport
       parentRoute: typeof LayoutRoute
     }
-    '/product/$productId': {
-      id: '/product/$productId'
-      path: '/product/$productId'
-      fullPath: '/product/$productId'
-      preLoaderRoute: typeof ProductProductIdRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/feedback/addFeedback': {
-      id: '/feedback/addFeedback'
-      path: '/feedback/addFeedback'
-      fullPath: '/feedback/addFeedback'
-      preLoaderRoute: typeof FeedbackAddFeedbackRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/feedback/$feedbackId': {
-      id: '/feedback/$feedbackId'
-      path: '/feedback/$feedbackId'
-      fullPath: '/feedback/$feedbackId'
-      preLoaderRoute: typeof FeedbackFeedbackIdRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/auth/login': {
       id: '/auth/login'
       path: '/auth/login'
       fullPath: '/auth/login'
       preLoaderRoute: typeof AuthLoginRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/_sub/cart/': {
+      id: '/_sub/cart/'
+      path: '/cart'
+      fullPath: '/cart'
+      preLoaderRoute: typeof SubCartIndexRouteImport
+      parentRoute: typeof SubRoute
     }
     '/_layout/product/': {
       id: '/_layout/product/'
@@ -242,6 +244,34 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LayoutAboutIndexRouteImport
       parentRoute: typeof LayoutRoute
     }
+    '/_sub/product/$productId': {
+      id: '/_sub/product/$productId'
+      path: '/product/$productId'
+      fullPath: '/product/$productId'
+      preLoaderRoute: typeof SubProductProductIdRouteImport
+      parentRoute: typeof SubRoute
+    }
+    '/_sub/me/editUserInfo': {
+      id: '/_sub/me/editUserInfo'
+      path: '/me/editUserInfo'
+      fullPath: '/me/editUserInfo'
+      preLoaderRoute: typeof SubMeEditUserInfoRouteImport
+      parentRoute: typeof SubRoute
+    }
+    '/_sub/feedback/addFeedback': {
+      id: '/_sub/feedback/addFeedback'
+      path: '/feedback/addFeedback'
+      fullPath: '/feedback/addFeedback'
+      preLoaderRoute: typeof SubFeedbackAddFeedbackRouteImport
+      parentRoute: typeof SubRoute
+    }
+    '/_sub/feedback/$feedbackId': {
+      id: '/_sub/feedback/$feedbackId'
+      path: '/feedback/$feedbackId'
+      fullPath: '/feedback/$feedbackId'
+      preLoaderRoute: typeof SubFeedbackFeedbackIdRouteImport
+      parentRoute: typeof SubRoute
+    }
   }
 }
 
@@ -264,13 +294,28 @@ const LayoutRouteChildren: LayoutRouteChildren = {
 const LayoutRouteWithChildren =
   LayoutRoute._addFileChildren(LayoutRouteChildren)
 
+interface SubRouteChildren {
+  SubFeedbackFeedbackIdRoute: typeof SubFeedbackFeedbackIdRoute
+  SubFeedbackAddFeedbackRoute: typeof SubFeedbackAddFeedbackRoute
+  SubMeEditUserInfoRoute: typeof SubMeEditUserInfoRoute
+  SubProductProductIdRoute: typeof SubProductProductIdRoute
+  SubCartIndexRoute: typeof SubCartIndexRoute
+}
+
+const SubRouteChildren: SubRouteChildren = {
+  SubFeedbackFeedbackIdRoute: SubFeedbackFeedbackIdRoute,
+  SubFeedbackAddFeedbackRoute: SubFeedbackAddFeedbackRoute,
+  SubMeEditUserInfoRoute: SubMeEditUserInfoRoute,
+  SubProductProductIdRoute: SubProductProductIdRoute,
+  SubCartIndexRoute: SubCartIndexRoute,
+}
+
+const SubRouteWithChildren = SubRoute._addFileChildren(SubRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   LayoutRoute: LayoutRouteWithChildren,
+  SubRoute: SubRouteWithChildren,
   AuthLoginRoute: AuthLoginRoute,
-  FeedbackFeedbackIdRoute: FeedbackFeedbackIdRoute,
-  FeedbackAddFeedbackRoute: FeedbackAddFeedbackRoute,
-  ProductProductIdRoute: ProductProductIdRoute,
-  CartIndexRoute: CartIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
