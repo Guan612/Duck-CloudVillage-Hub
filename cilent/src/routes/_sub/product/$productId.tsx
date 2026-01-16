@@ -9,13 +9,15 @@ import { ChevronLeft, Share2, ShoppingCart, Store } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
-export const Route = createFileRoute("/product/$productId")({
+export const Route = createFileRoute("/_sub/product/$productId")({
   component: RouteComponent,
+  staticData: {
+    title: "产品详情",
+  },
 });
 
 function RouteComponent() {
   const { productId } = Route.useParams();
-  const router = useRouter();
   const navigate = useNavigate();
   const [isAdding, setIsAdding] = useState(false);
   const handleAddToCart = () => {
@@ -38,30 +40,14 @@ function RouteComponent() {
   };
   return (
     // ✅ 2. 外层容器改为 flex 布局，模拟主布局的结构
-    <div className="flex h-screen w-full bg-background">
+    <div className="flex h-full w-full bg-background">
       {/* ✅ 3. 在这里插入 Sidebar！ */}
       {/* 关键 CSS: "hidden md:flex" */}
       {/* 解释: 手机上 hidden (看不见)，PC 上 flex (显示在左侧) */}
-      <AppSidebar className="hidden md:flex" />
-
       {/* ✅ 4. 右侧内容区域 (详情页主体) */}
       {/* flex-1: 占满剩余空间 */}
       <div className="flex-1 flex flex-col h-full overflow-hidden relative z-50 bg-background">
         {/* 顶部导航栏 */}
-        <header className="sticky top-0 z-10 flex items-center justify-between px-4 py-3 bg-background/80 backdrop-blur-md border-b">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => router.history.back()}
-            className="-ml-2"
-          >
-            <ChevronLeft size={24} />
-          </Button>
-          <span className="font-semibold">商品详情</span>
-          <Button variant="ghost" size="icon" className="-mr-2">
-            <Share2 size={20} />
-          </Button>
-        </header>
 
         {/* 滚动内容区 */}
         <main className="flex-1 overflow-y-auto pb-safe-or-24 p-4 scrollbar-hide">
