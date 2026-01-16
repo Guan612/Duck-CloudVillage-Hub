@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as LayoutRouteImport } from './routes/_layout'
+import { Route as CartIndexRouteImport } from './routes/cart/index'
 import { Route as LayoutIndexRouteImport } from './routes/_layout/index'
 import { Route as ProductProductIdRouteImport } from './routes/product/$productId'
 import { Route as FeedbackAddFeedbackRouteImport } from './routes/feedback/addFeedback'
@@ -22,6 +23,11 @@ import { Route as LayoutAboutIndexRouteImport } from './routes/_layout/about/ind
 
 const LayoutRoute = LayoutRouteImport.update({
   id: '/_layout',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CartIndexRoute = CartIndexRouteImport.update({
+  id: '/cart/',
+  path: '/cart/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LayoutIndexRoute = LayoutIndexRouteImport.update({
@@ -76,6 +82,7 @@ export interface FileRoutesByFullPath {
   '/feedback/addFeedback': typeof FeedbackAddFeedbackRoute
   '/product/$productId': typeof ProductProductIdRoute
   '/': typeof LayoutIndexRoute
+  '/cart': typeof CartIndexRoute
   '/about': typeof LayoutAboutIndexRoute
   '/feedback': typeof LayoutFeedbackIndexRoute
   '/me': typeof LayoutMeIndexRoute
@@ -87,6 +94,7 @@ export interface FileRoutesByTo {
   '/feedback/addFeedback': typeof FeedbackAddFeedbackRoute
   '/product/$productId': typeof ProductProductIdRoute
   '/': typeof LayoutIndexRoute
+  '/cart': typeof CartIndexRoute
   '/about': typeof LayoutAboutIndexRoute
   '/feedback': typeof LayoutFeedbackIndexRoute
   '/me': typeof LayoutMeIndexRoute
@@ -100,6 +108,7 @@ export interface FileRoutesById {
   '/feedback/addFeedback': typeof FeedbackAddFeedbackRoute
   '/product/$productId': typeof ProductProductIdRoute
   '/_layout/': typeof LayoutIndexRoute
+  '/cart/': typeof CartIndexRoute
   '/_layout/about/': typeof LayoutAboutIndexRoute
   '/_layout/feedback/': typeof LayoutFeedbackIndexRoute
   '/_layout/me/': typeof LayoutMeIndexRoute
@@ -113,6 +122,7 @@ export interface FileRouteTypes {
     | '/feedback/addFeedback'
     | '/product/$productId'
     | '/'
+    | '/cart'
     | '/about'
     | '/feedback'
     | '/me'
@@ -124,6 +134,7 @@ export interface FileRouteTypes {
     | '/feedback/addFeedback'
     | '/product/$productId'
     | '/'
+    | '/cart'
     | '/about'
     | '/feedback'
     | '/me'
@@ -136,6 +147,7 @@ export interface FileRouteTypes {
     | '/feedback/addFeedback'
     | '/product/$productId'
     | '/_layout/'
+    | '/cart/'
     | '/_layout/about/'
     | '/_layout/feedback/'
     | '/_layout/me/'
@@ -148,6 +160,7 @@ export interface RootRouteChildren {
   FeedbackFeedbackIdRoute: typeof FeedbackFeedbackIdRoute
   FeedbackAddFeedbackRoute: typeof FeedbackAddFeedbackRoute
   ProductProductIdRoute: typeof ProductProductIdRoute
+  CartIndexRoute: typeof CartIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -157,6 +170,13 @@ declare module '@tanstack/react-router' {
       path: ''
       fullPath: ''
       preLoaderRoute: typeof LayoutRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/cart/': {
+      id: '/cart/'
+      path: '/cart'
+      fullPath: '/cart'
+      preLoaderRoute: typeof CartIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_layout/': {
@@ -250,6 +270,7 @@ const rootRouteChildren: RootRouteChildren = {
   FeedbackFeedbackIdRoute: FeedbackFeedbackIdRoute,
   FeedbackAddFeedbackRoute: FeedbackAddFeedbackRoute,
   ProductProductIdRoute: ProductProductIdRoute,
+  CartIndexRoute: CartIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
