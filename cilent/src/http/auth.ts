@@ -5,5 +5,5 @@ export const loginApi = (data) => {
 };
 
 export const registerApi = (data) => {
-  return http.post("auth/register", data);
+  return http.post("/auth/register", data);
 };
