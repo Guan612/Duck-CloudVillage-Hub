@@ -7,6 +7,7 @@ import { appConfig } from "../config";
 import { updateUsersSchema } from "../validators";
 import { fail, success } from "../utils/result";
 import { useTranslation } from "@intlify/hono";
+import { requireRole, Role } from "../middleware/role";
 
 // 1. 初始化 OpenAPIHono
 // 可以通过 Variables 类型定义 JWT Payload 的类型安全
@@ -26,10 +27,12 @@ const listUsersRoute = createRoute({
   security: [{ Bearer: [] }], // 声明需要 JWT 认证
   responses: {
     200: { description: "成功获取用户列表" },
+    401: { description: "token过期" },
+    403: { description: "权限不足" },
   },
 });
 
-userRouter.openapi(listUsersRoute, async (c) => {
+userRouter.openapi(listUsersRoute, requireRole([Role.ADMIN]), async (c) => {
   const res = await db.query.users.findMany({
     columns: {
       id: true,
