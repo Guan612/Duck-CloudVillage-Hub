@@ -12,7 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as SubRouteImport } from './routes/_sub'
 import { Route as LayoutRouteImport } from './routes/_layout'
 import { Route as LayoutIndexRouteImport } from './routes/_layout/index'
-import { Route as AuthLoginRouteImport } from './routes/auth/login'
+import { Route as SubSettingIndexRouteImport } from './routes/_sub/setting/index'
 import { Route as SubCartIndexRouteImport } from './routes/_sub/cart/index'
 import { Route as LayoutProductIndexRouteImport } from './routes/_layout/product/index'
 import { Route as LayoutMeIndexRouteImport } from './routes/_layout/me/index'
@@ -22,6 +22,7 @@ import { Route as SubProductProductIdRouteImport } from './routes/_sub/product/$
 import { Route as SubMeEditUserInfoRouteImport } from './routes/_sub/me/editUserInfo'
 import { Route as SubFeedbackAddFeedbackRouteImport } from './routes/_sub/feedback/addFeedback'
 import { Route as SubFeedbackFeedbackIdRouteImport } from './routes/_sub/feedback/$feedbackId'
+import { Route as SubAuthLoginRouteImport } from './routes/_sub/auth/login'
 
 const SubRoute = SubRouteImport.update({
   id: '/_sub',
@@ -36,10 +37,10 @@ const LayoutIndexRoute = LayoutIndexRouteImport.update({
   path: '/',
   getParentRoute: () => LayoutRoute,
 } as any)
-const AuthLoginRoute = AuthLoginRouteImport.update({
-  id: '/auth/login',
-  path: '/auth/login',
-  getParentRoute: () => rootRouteImport,
+const SubSettingIndexRoute = SubSettingIndexRouteImport.update({
+  id: '/setting/',
+  path: '/setting/',
+  getParentRoute: () => SubRoute,
 } as any)
 const SubCartIndexRoute = SubCartIndexRouteImport.update({
   id: '/cart/',
@@ -86,10 +87,15 @@ const SubFeedbackFeedbackIdRoute = SubFeedbackFeedbackIdRouteImport.update({
   path: '/feedback/$feedbackId',
   getParentRoute: () => SubRoute,
 } as any)
+const SubAuthLoginRoute = SubAuthLoginRouteImport.update({
+  id: '/auth/login',
+  path: '/auth/login',
+  getParentRoute: () => SubRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
-  '/auth/login': typeof AuthLoginRoute
   '/': typeof LayoutIndexRoute
+  '/auth/login': typeof SubAuthLoginRoute
   '/feedback/$feedbackId': typeof SubFeedbackFeedbackIdRoute
   '/feedback/addFeedback': typeof SubFeedbackAddFeedbackRoute
   '/me/editUserInfo': typeof SubMeEditUserInfoRoute
@@ -99,10 +105,11 @@ export interface FileRoutesByFullPath {
   '/me': typeof LayoutMeIndexRoute
   '/product': typeof LayoutProductIndexRoute
   '/cart': typeof SubCartIndexRoute
+  '/setting': typeof SubSettingIndexRoute
 }
 export interface FileRoutesByTo {
-  '/auth/login': typeof AuthLoginRoute
   '/': typeof LayoutIndexRoute
+  '/auth/login': typeof SubAuthLoginRoute
   '/feedback/$feedbackId': typeof SubFeedbackFeedbackIdRoute
   '/feedback/addFeedback': typeof SubFeedbackAddFeedbackRoute
   '/me/editUserInfo': typeof SubMeEditUserInfoRoute
@@ -112,13 +119,14 @@ export interface FileRoutesByTo {
   '/me': typeof LayoutMeIndexRoute
   '/product': typeof LayoutProductIndexRoute
   '/cart': typeof SubCartIndexRoute
+  '/setting': typeof SubSettingIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_layout': typeof LayoutRouteWithChildren
   '/_sub': typeof SubRouteWithChildren
-  '/auth/login': typeof AuthLoginRoute
   '/_layout/': typeof LayoutIndexRoute
+  '/_sub/auth/login': typeof SubAuthLoginRoute
   '/_sub/feedback/$feedbackId': typeof SubFeedbackFeedbackIdRoute
   '/_sub/feedback/addFeedback': typeof SubFeedbackAddFeedbackRoute
   '/_sub/me/editUserInfo': typeof SubMeEditUserInfoRoute
@@ -128,12 +136,13 @@ export interface FileRoutesById {
   '/_layout/me/': typeof LayoutMeIndexRoute
   '/_layout/product/': typeof LayoutProductIndexRoute
   '/_sub/cart/': typeof SubCartIndexRoute
+  '/_sub/setting/': typeof SubSettingIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
-    | '/auth/login'
     | '/'
+    | '/auth/login'
     | '/feedback/$feedbackId'
     | '/feedback/addFeedback'
     | '/me/editUserInfo'
@@ -143,10 +152,11 @@ export interface FileRouteTypes {
     | '/me'
     | '/product'
     | '/cart'
+    | '/setting'
   fileRoutesByTo: FileRoutesByTo
   to:
-    | '/auth/login'
     | '/'
+    | '/auth/login'
     | '/feedback/$feedbackId'
     | '/feedback/addFeedback'
     | '/me/editUserInfo'
@@ -156,12 +166,13 @@ export interface FileRouteTypes {
     | '/me'
     | '/product'
     | '/cart'
+    | '/setting'
   id:
     | '__root__'
     | '/_layout'
     | '/_sub'
-    | '/auth/login'
     | '/_layout/'
+    | '/_sub/auth/login'
     | '/_sub/feedback/$feedbackId'
     | '/_sub/feedback/addFeedback'
     | '/_sub/me/editUserInfo'
@@ -171,12 +182,12 @@ export interface FileRouteTypes {
     | '/_layout/me/'
     | '/_layout/product/'
     | '/_sub/cart/'
+    | '/_sub/setting/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   LayoutRoute: typeof LayoutRouteWithChildren
   SubRoute: typeof SubRouteWithChildren
-  AuthLoginRoute: typeof AuthLoginRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -202,12 +213,12 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LayoutIndexRouteImport
       parentRoute: typeof LayoutRoute
     }
-    '/auth/login': {
-      id: '/auth/login'
-      path: '/auth/login'
-      fullPath: '/auth/login'
-      preLoaderRoute: typeof AuthLoginRouteImport
-      parentRoute: typeof rootRouteImport
+    '/_sub/setting/': {
+      id: '/_sub/setting/'
+      path: '/setting'
+      fullPath: '/setting'
+      preLoaderRoute: typeof SubSettingIndexRouteImport
+      parentRoute: typeof SubRoute
     }
     '/_sub/cart/': {
       id: '/_sub/cart/'
@@ -272,6 +283,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SubFeedbackFeedbackIdRouteImport
       parentRoute: typeof SubRoute
     }
+    '/_sub/auth/login': {
+      id: '/_sub/auth/login'
+      path: '/auth/login'
+      fullPath: '/auth/login'
+      preLoaderRoute: typeof SubAuthLoginRouteImport
+      parentRoute: typeof SubRoute
+    }
   }
 }
 
@@ -295,19 +313,23 @@ const LayoutRouteWithChildren =
   LayoutRoute._addFileChildren(LayoutRouteChildren)
 
 interface SubRouteChildren {
+  SubAuthLoginRoute: typeof SubAuthLoginRoute
   SubFeedbackFeedbackIdRoute: typeof SubFeedbackFeedbackIdRoute
   SubFeedbackAddFeedbackRoute: typeof SubFeedbackAddFeedbackRoute
   SubMeEditUserInfoRoute: typeof SubMeEditUserInfoRoute
   SubProductProductIdRoute: typeof SubProductProductIdRoute
   SubCartIndexRoute: typeof SubCartIndexRoute
+  SubSettingIndexRoute: typeof SubSettingIndexRoute
 }
 
 const SubRouteChildren: SubRouteChildren = {
+  SubAuthLoginRoute: SubAuthLoginRoute,
   SubFeedbackFeedbackIdRoute: SubFeedbackFeedbackIdRoute,
   SubFeedbackAddFeedbackRoute: SubFeedbackAddFeedbackRoute,
   SubMeEditUserInfoRoute: SubMeEditUserInfoRoute,
   SubProductProductIdRoute: SubProductProductIdRoute,
   SubCartIndexRoute: SubCartIndexRoute,
+  SubSettingIndexRoute: SubSettingIndexRoute,
 }
 
 const SubRouteWithChildren = SubRoute._addFileChildren(SubRouteChildren)
@@ -315,7 +337,6 @@ const SubRouteWithChildren = SubRoute._addFileChildren(SubRouteChildren)
 const rootRouteChildren: RootRouteChildren = {
   LayoutRoute: LayoutRouteWithChildren,
   SubRoute: SubRouteWithChildren,
-  AuthLoginRoute: AuthLoginRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
