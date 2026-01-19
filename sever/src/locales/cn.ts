@@ -7,8 +7,15 @@ export default {
     not_found: "找不到资源",
   },
   auth: {
-    login_err: "用户名或密码错误",
-    login_success: "登录成功",
-    user_exit: "用户已存在，请登录",
+    err: {
+      login: "用户名或密码错误",
+      user_exit: "用户已存在，请登录",
+      permisson: "权限不足",
+      token: "Token无效",
+      token_refresh:"Token刷新错误"
+    },
+    scucces: {
+      login: "登录成功",
+    },
   },
 };
