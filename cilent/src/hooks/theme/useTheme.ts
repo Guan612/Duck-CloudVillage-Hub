@@ -1,9 +1,9 @@
-import { useAtomValue } from "jotai";
+import { useAtom } from "jotai";
 import { useEffect } from "react";
 import { themeAtom } from "@/store"; // 引入我们之前定义的 atom
 
-export function useThemeEffect() {
-  const theme = useAtomValue(themeAtom);
+export function useTheme() {
+  const [theme, setTheme] = useAtom(themeAtom);
 
   useEffect(() => {
     const root = window.document.documentElement;
@@ -24,4 +24,9 @@ export function useThemeEffect() {
       root.classList.add(theme);
     }
   }, [theme]); // 当 theme 变化时触发
+
+  return {
+    theme,
+    setTheme,
+  };
 }
