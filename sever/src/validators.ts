@@ -128,8 +128,13 @@ export const selectCartSchema = createSelectSchema(carts);
 export const insertCartSchema = createInsertSchema(carts, {
   quantity: (schema) => schema.int().positive("数量必须大于0"),
 }).omit({
+  userId: true,
   createdAt: true,
   updatedAt: true,
+});
+
+export const updateCartSchema = insertCartSchema.partial().omit({
+  productId: true,
 });
 
 // =========================================
