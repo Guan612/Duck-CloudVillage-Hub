@@ -2,6 +2,7 @@ import { AppSidebar } from "@/components/component/sidebar";
 import { Button } from "@/components/ui/button";
 import {
   createFileRoute,
+  Link,
   useNavigate,
   useRouter,
 } from "@tanstack/react-router";
@@ -66,14 +67,17 @@ function RouteComponent() {
               <Store size={20} />
               <span className="text-[10px] font-medium">店铺</span>
             </button>
-            <button className="flex flex-col items-center justify-center gap-0.5 text-muted-foreground hover:text-primary transition-colors relative">
+            <Link
+              to="/cart"
+              className="flex flex-col items-center justify-center gap-0.5 text-muted-foreground hover:text-primary transition-colors relative"
+            >
               <ShoppingCart size={20} />
               <span className="text-[10px] font-medium">购物车</span>
               {/* 购物车角标 (可选) */}
               <span className="absolute -top-1 -right-1 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-red-500 text-[9px] text-white">
                 2
               </span>
-            </button>
+            </Link>
           </div>
 
           {/* 右侧：双按钮组合 */}
