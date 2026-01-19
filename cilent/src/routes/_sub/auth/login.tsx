@@ -1,17 +1,8 @@
-import {
-  createFileRoute,
-  useNavigate,
-  useRouter,
-} from "@tanstack/react-router";
-import { useSetAtom } from "jotai";
-import { tokenAtom, userInfoAtom } from "@/store/auth";
+import { createFileRoute } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { toast } from "sonner";
 import { Sprout, Loader2 } from "lucide-react"; // 引入 Loading 图标
 import { z } from "zod";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
 import {
   Form,
   FormControl,
@@ -20,76 +11,27 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { loginApi } from "@/http/auth";
+import useLogin, { loginSearchSchema } from "@/hooks/auth/useLogin";
 
-// 1. 定义 Zod 校验 Schema
-// 这定义了表单的“形状”和校验规则
-const loginSchema = z.object({
-  loginId: z.string().min(1, "请输入用户名/手机号").max(20, "用户名过长"),
-  password: z.string().min(6, "密码至少需要6位"),
-});
-
-// 定义 URL 参数验证
-const loginSearchSchema = z.object({
-  redirect: z.string().optional(),
-});
-
-export const Route = createFileRoute("/auth/login")({
+export const Route = createFileRoute("/_sub/auth/login")({
   validateSearch: loginSearchSchema,
   component: LoginPage,
+  staticData: {
+    title: "登录",
+  },
 });
 
 function LoginPage() {
-  const setToken = useSetAtom(tokenAtom);
-  const setUserInfo = useSetAtom(userInfoAtom);
-  const router = useRouter();
-  const navigate = useNavigate();
+  // ✅ 1. 在组件层获取 search 参数 (TanStack Router 的最佳实践)
   const search = Route.useSearch();
 
-  // 2. 初始化 Form 实例
-  const form = useForm<z.infer<typeof loginSchema>>({
-    resolver: zodResolver(loginSchema), // 绑定 Zod 校验
-    defaultValues: {
-      loginId: "", // 默认值
-      password: "",
-    },
+  // ✅ 2. 将参数传给 Hook
+  const { form, onSubmit } = useLogin({
+    redirect: search.redirect,
   });
 
-  // 3. 处理提交逻辑
-  // data 是已经通过校验的数据
-  const onSubmit = async (values: z.infer<typeof loginSchema>) => {
-    try {
-      // 发起请求 (使用我们封装的 http 类)
-      // 假设后端返回结构: { token: "..." }
-      const res = await loginApi(values);
-      console.log(res);
-
-      // 保存 Token
-      setToken(res.data.token);
-      setUserInfo(res.data.user);
-
-      toast.success("登录成功");
-
-      // 2. 关键：通知路由系统状态已过期，需要重新加载数据和权限检查
-      await router.invalidate();
-
-      //跳转逻辑
-      if (search.redirect) {
-        window.location.href = search.redirect;
-      } else {
-        await navigate({ to: "/", replace: true });
-      }
-    } catch (error) {
-      // 错误处理
-      console.error(error);
-      toast.error(
-        error instanceof Error ? error.message : "登录失败，请检查账号密码",
-      );
-    }
-  };
-
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-muted/20 p-4">
+    <div className="flex h-full flex-col items-center justify-center p-4">
       <div className="w-full max-w-sm space-y-6 rounded-2xl bg-background p-8 shadow-lg">
         {/* Logo 和 标题 */}
         <div className="flex flex-col items-center text-center space-y-2">
