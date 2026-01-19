@@ -1,52 +1,73 @@
-import { Hono } from "hono";
-import { sign } from "hono/jwt";
 import { users } from "../db/schema";
 import { db } from "../db";
 import { eq } from "drizzle-orm";
-import { appConfig } from "../config";
 import { insertUserSchema, loginSchema } from "../validators";
-import z from "zod";
 import { fail, success } from "../utils/result";
 import { useTranslation } from "@intlify/hono";
+import { createTokens } from "../utils/token";
+import { createRoute, OpenAPIHono } from "@hono/zod-openapi";
 
-const authRouter = new Hono();
+const authRouter = new OpenAPIHono();
 
-authRouter.post("/login", async (c) => {
-  const body = await c.req.json();
+const loginRoute = createRoute({
+  method: "post",
+  path: "/login",
+  summary: "用户登录",
+  request: {
+    body: {
+      content: {
+        "application/json": { schema: loginSchema },
+      },
+    },
+  },
+  responses: {
+    200: { description: "登录成功" },
+    401: { description: "认证失败" },
+    400: { description: "参数错误" },
+  },
+});
+
+const registerRoute = createRoute({
+  method: "post",
+  path: "/register",
+  summary: "用户注册",
+  request: {
+    body: {
+      content: {
+        "application/json": { schema: insertUserSchema },
+      },
+    },
+  },
+  responses: {
+    200: { description: "注册成功" },
+    409: { description: "用户已存在" },
+  },
+});
+
+authRouter.openapi(loginRoute, async (c) => {
+  // 注意：使用 zod-openapi 后，可以通过 c.req.valid('json') 获取已验证的数据
+  const data = c.req.valid("json");
   const t = await useTranslation(c);
-  const req = loginSchema.safeParse(body);
 
-  if (!req.success) {
-    return c.json(fail(t("param_error"), z.flattenError(req.error)), 400);
-  }
   const user = await db.query.users.findFirst({
-    where: eq(users.loginId, req.data.loginId),
+    where: eq(users.loginId, data.loginId),
   });
 
   if (!user) {
     return c.json(fail(t("auth.login_err")), 401);
   }
 
-  const isMatch = await Bun.password.verify(req.data.password, user.password);
-
+  const isMatch = await Bun.password.verify(data.password, user.password);
   if (!isMatch) {
     return c.json(fail(t("auth.login_err")), 401);
   }
 
-  const payload = {
-    userId: user.id, // Subject: 用户ID (标准字段)
-    loginId: user.loginId,
-    role: user.role, // Role: 存入角色，方便前端和后端中间件判断权限
-    name: user.nickname, // 可选：存入昵称，前端解析后可直接显示
-    exp: Math.floor(Date.now() / 1000) + appConfig.jwt.expiresIn,
-  };
-
-  const token = await sign(payload, appConfig.jwt.secret);
-
+  const tokens = await createTokens(user);
   return c.json(
     success(
       {
-        token: token,
+        token: tokens.accessToken,
+        refreshToken: tokens.refreshToken,
         user: {
           id: user.id,
           loginId: user.loginId,
@@ -57,37 +78,31 @@ authRouter.post("/login", async (c) => {
       },
       t("auth.login_success"),
     ),
+    200,
   );
 });
 
-authRouter.post("/register", async (c) => {
+authRouter.openapi(registerRoute, async (c) => {
+  const data = c.req.valid("json");
   const t = await useTranslation(c);
-  const body = await c.req.json();
-
-  const req = insertUserSchema.safeParse(body);
-
-  if (!req.success) {
-    return c.json(fail(t("param_error"), z.flattenError(req.error)), 400);
-  }
 
   const isUser = await db.query.users.findFirst({
-    where: eq(users.loginId, req.data.loginId),
+    where: eq(users.loginId, data.loginId),
   });
 
   if (isUser) {
     return c.json(fail(t("auth.user_exit")), 409);
   }
 
-  const hashedPassword = await Bun.password.hash(req.data.password);
+  const hashedPassword = await Bun.password.hash(data.password);
 
-  const newUser = await db
+  const [newUser] = await db
     .insert(users)
     .values({
-      ...req.data, // 1. 展开 Zod 验证通过的所有字段
-      password: hashedPassword, // 2. 用加密后的密码覆盖掉原密码
+      ...data,
+      password: hashedPassword,
     })
     .returning({
-      // 3. 显式指定返回哪些字段 (千万别返回密码!)
       id: users.id,
       loginId: users.loginId,
       nickname: users.nickname,
@@ -95,7 +110,7 @@ authRouter.post("/register", async (c) => {
       createdAt: users.createdAt,
     });
 
-  return c.json(success(newUser));
+  return c.json(success(newUser), 200);
 });
 
 export default authRouter;
