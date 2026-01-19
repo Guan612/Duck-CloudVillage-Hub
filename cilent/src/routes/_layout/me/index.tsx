@@ -5,7 +5,7 @@ import { requireAuth } from "@/hooks/auth/useAuthGurad";
 import { cn } from "@/lib/utils";
 import { themeAtom } from "@/store";
 import { tokenAtom, userInfoAtom } from "@/store/auth";
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import {
   CalendarCheck,
@@ -14,6 +14,8 @@ import {
   Laptop,
   MessageSquare,
   Moon,
+  Settings2,
+  ShoppingCart,
   Sun,
   ThumbsUp,
 } from "lucide-react";
@@ -27,7 +29,6 @@ function RouteComponent() {
   const [userInfo, setUserInfo] = useAtom(userInfoAtom);
   const setToken = useSetAtom(tokenAtom);
   const navigate = useNavigate();
-  const [theme, setTheme] = useAtom(themeAtom);
   const logout = () => {
     setToken(null);
     setUserInfo(null);
@@ -107,44 +108,15 @@ function RouteComponent() {
         </CardContent>
       </Card>
 
-      <div className="border p-4 rounded-xl">
-        <h3 className="font-bold">主题设置</h3>
-        <p className="text-sm text-gray-500 mb-2">当前: {theme}</p>
-        <div className="flex items-center gap-2">
-          {/* 浅色按钮 */}
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => setTheme("light")}
-            className={cn(theme === "light" && "bg-muted text-primary")}
-            title="浅色模式"
-          >
-            <Sun className="h-[1.2rem] w-[1.2rem]" />
-          </Button>
+      <Link to="/setting" className="flex border p-4 rounded-xl items-center">
+        <Settings2 className="h-[1.2rem] w-[1.2rem] mx-1" />
+        <div className="font-bold">应用设置</div>
+      </Link>
 
-          {/* 深色按钮 */}
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => setTheme("dark")}
-            className={cn(theme === "dark" && "bg-muted text-primary")}
-            title="深色模式"
-          >
-            <Moon className="h-[1.2rem] w-[1.2rem]" />
-          </Button>
-
-          {/* 跟随系统按钮 */}
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => setTheme("system")}
-            className={cn(theme === "system" && "bg-muted text-primary")}
-            title="跟随系统"
-          >
-            <Laptop className="h-[1.2rem] w-[1.2rem]" />
-          </Button>
-        </div>
-      </div>
+      <Link to="/cart" className="flex border p-4 rounded-xl items-center">
+        <ShoppingCart className="h-[1.2rem] w-[1.2rem] mx-1" />
+        <div className="font-bold">购物车</div>
+      </Link>
     </div>
   );
 }

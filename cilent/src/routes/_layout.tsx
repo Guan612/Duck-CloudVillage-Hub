@@ -1,13 +1,12 @@
 import { AppSidebar } from "@/components/component/sidebar";
-import { useThemeEffect } from "@/hooks/theme/useThemeEffect";
+import { useTheme } from "@/hooks/theme/useTheme";
 import { createFileRoute, Link, Outlet } from "@tanstack/react-router";
 import {
   Home,
   User,
   Sprout, // 嫩芽，代表农业/乡村
-  CloudSun, // 云/天气
-  Menu,
-  Settings,
+  ShoppingBasket,
+  MessageSquareText,
 } from "lucide-react";
 
 export const Route = createFileRoute("/_layout")({
@@ -18,13 +17,13 @@ export const Route = createFileRoute("/_layout")({
 // 这样无论是在侧边栏还是底部栏，都共用这一份数据
 const navItems = [
   { to: "/", label: "乡村概览", icon: Home },
-  { to: "/product", label: "云上集市", icon: CloudSun }, // 假设你有这个路由
-  { to: "/feedback", label: "村民反馈", icon: Sprout }, // 假设你有这个路由
+  { to: "/product", label: "云上集市", icon: ShoppingBasket }, // 假设你有这个路由
+  { to: "/feedback", label: "村民反馈", icon: MessageSquareText }, // 假设你有这个路由
   { to: "/me", label: "我的", icon: User },
 ];
 
 function AppLayout() {
-  useThemeEffect();
+  useTheme();
   return (
     <div className="flex h-screen w-full bg-background text-foreground overflow-hidden">
       {/* ------------------- 桌面端：左侧侧边栏 ------------------- */}

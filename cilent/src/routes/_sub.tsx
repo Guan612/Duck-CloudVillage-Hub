@@ -9,6 +9,7 @@ import { ChevronLeft } from "lucide-react";
 import { cn } from "@/lib/utils";
 // 1. 引入侧边栏组件
 import { AppSidebar } from "@/components/component/sidebar";
+import { AnimatedOutlet } from "@/components/component/animatedOutlet";
 
 export const Route = createFileRoute("/_sub")({
   component: SubLayout,
@@ -54,14 +55,23 @@ function SubLayout() {
         {/* --- 内容区域 --- */}
         <main
           className={cn(
+            "flex-1 grid grid-cols-1 grid-rows-1 relative z-0 overflow-hidden",
+          )}
+        >
+          <AnimatedOutlet />
+        </main>
+        {/* <main
+          className={cn(
             "flex-1 overflow-y-auto overflow-x-hidden",
             "p-4 pb-safe",
-            // PC 端可能希望内容不要太宽，可以限制一下 max-w
-            "md:p-6 md:max-w-4xl",
+             // 🔥 核心修改：
+            // 1. mx-auto: 让左右外边距自动相等 -> 水平居中
+            // 2. w-full: 确保在没达到 max-w 之前占满宽度
+            "md:p-6 md:max-w-4xl mx-auto w-full"
           )}
         >
           <Outlet />
-        </main>
+        </main> */}
       </div>
     </div>
   );
