@@ -1,11 +1,17 @@
 import { users } from "../db/schema";
 import { db } from "../db";
 import { eq } from "drizzle-orm";
-import { insertUserSchema, loginSchema } from "../validators";
+import {
+  insertUserSchema,
+  loginSchema,
+  refreshTokenSchema,
+} from "../validators";
 import { fail, success } from "../utils/result";
 import { useTranslation } from "@intlify/hono";
 import { createTokens } from "../utils/token";
 import { createRoute, OpenAPIHono } from "@hono/zod-openapi";
+import { verify } from "hono/jwt";
+import { appConfig } from "../config";
 
 const authRouter = new OpenAPIHono();
 
@@ -54,12 +60,12 @@ authRouter.openapi(loginRoute, async (c) => {
   });
 
   if (!user) {
-    return c.json(fail(t("auth.login_err")), 401);
+    return c.json(fail(t("auth.err.login")), 401);
   }
 
   const isMatch = await Bun.password.verify(data.password, user.password);
   if (!isMatch) {
-    return c.json(fail(t("auth.login_err")), 401);
+    return c.json(fail(t("auth.err.login")), 401);
   }
 
   const tokens = await createTokens(user);
@@ -76,7 +82,7 @@ authRouter.openapi(loginRoute, async (c) => {
           avatarUrl: user.avatarUrl,
         },
       },
-      t("auth.login_success"),
+      t("auth.success.login_success"),
     ),
     200,
   );
@@ -91,7 +97,7 @@ authRouter.openapi(registerRoute, async (c) => {
   });
 
   if (isUser) {
-    return c.json(fail(t("auth.user_exit")), 409);
+    return c.json(fail(t("auth.err.user_exit")), 409);
   }
 
   const hashedPassword = await Bun.password.hash(data.password);
@@ -111,6 +117,62 @@ authRouter.openapi(registerRoute, async (c) => {
     });
 
   return c.json(success(newUser), 200);
+});
+
+const refreshTokenRoute = createRoute({
+  method: "post",
+  path: "/refresh",
+  summary: "刷新token",
+  responses: {
+    200: { description: "刷新成功" },
+    401: { description: "刷新失败" },
+  },
+  request: {
+    body: {
+      content: { "application/json": { schema: refreshTokenSchema } },
+    },
+  },
+});
+
+authRouter.openapi(refreshTokenRoute, async (c) => {
+  const t = await useTranslation(c);
+  const { refreshToken } = c.req.valid("json");
+
+  try {
+    // 2. 验证 Refresh Token 的合法性 (签名 + 过期时间)
+    // 如果过期或被篡改，verify 会直接抛出异常，进入 catch
+    const payload = await verify(refreshToken, appConfig.jwt.refresh_secret);
+
+    // 3. 安全检查 (非常重要！)
+    // 确保这个 Token 是 refresh 类型，防止用户拿 access token 来这里捣乱
+    if (payload.type !== "refresh") {
+      throw new Error("Invalid token type");
+    }
+
+    const userId = payload.sub as number;
+
+    // 4. (可选但推荐) 查一下数据库，确保用户没被封号
+    const res = await db.query.users.findFirst({
+      where: eq(users.id, userId),
+    });
+
+    if (!res) {
+      return c.json(fail(t("auth.err.user_exit")), 401);
+    }
+
+    const role = res.role;
+
+    // 5. 🔥 核心：生成新的 Token 对 (滑动过期策略)
+    // 这里我们重新生成了一对 Token，包括新的 Refresh Token
+    // 这样只要用户在用，Refresh Token 的 7 天有效期就会不断重置
+    const newTokens = await createTokens({ id: userId, role });
+
+    return c.json(success(newTokens), 200);
+  } catch (e) {
+    console.error("刷新失败", e);
+    // 验证失败，返回 401，前端 Http 类会捕获这个错误并执行 handleLogout
+    return c.json(fail(t("errors")), 401);
+  }
 });
 
 export default authRouter;

@@ -122,17 +122,16 @@ class Http {
       // 🔥 注意：这里必须设置 skipInterceptor: true，防止死循环
       // 我们用 request 方法发请求，但如果是 axios 可以用纯 fetch
       const res = await this.post<{
-        accessToken: string;
-        refreshToken: string;
+        data: { accessToken: string; refreshToken?: string };
       }>("/auth/refresh", { refreshToken }, { skipInterceptor: true });
 
       console.log("[HTTP] Token 刷新成功");
 
       // 更新本地存储
-      await tauriLocalStore.set("token", res.accessToken);
+      await tauriLocalStore.set("token", res.data.accessToken);
       // 如果后端支持 refresh token 轮转，也要更新 refresh token
-      if (res.refreshToken) {
-        await tauriLocalStore.set("refresh_token", res.refreshToken);
+      if (res.data.refreshToken) {
+        await tauriLocalStore.set("refreshToken", res.data.refreshToken);
       }
       await tauriLocalStore.save(); // 记得保存到文件
 
@@ -157,7 +156,7 @@ class Http {
   private async handleLogout() {
     console.log("[HTTP] 强制登出");
     await tauriLocalStore.set("token", null);
-    await tauriLocalStore.set("refresh_token", null);
+    await tauriLocalStore.set("refreshToken", null);
     await tauriLocalStore.save();
 
     toast.error("登录已过期，请重新登录");

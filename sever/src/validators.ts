@@ -203,3 +203,8 @@ export const insertFeedbackSchema = createInsertSchema(feedbacks, {
 // =========================================
 // 如果你需要做 "修改个人资料" 或 "修改商品" 的接口，
 // 通常需要 partial()，因为更新时不需要传所有字段。
+
+//刷新token sechama
+export const refreshTokenSchema = z.object({
+  refreshToken: z.string("必须传入刷新token"),
+});
