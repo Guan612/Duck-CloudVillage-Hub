@@ -1,4 +1,6 @@
+import { tauriLocalStore } from "@/store/tauriStore";
 import { fetch } from "@tauri-apps/plugin-http";
+import { toast } from "sonner";
 
 // 基础配置
 const BASE_URL = "http://localhost:3000/api"; // 替换你的后端地址
@@ -6,17 +8,24 @@ const BASE_URL = "http://localhost:3000/api"; // 替换你的后端地址
 // 定义类似 Axios 的请求配置类型
 interface HttpConfig extends RequestInit {
   params?: Record<string, string | number>; // 用于 GET 请求的查询参数 ?a=1&b=2
+  // 新增：是否跳过 401 拦截（用于 refresh 请求本身，防止死循环）
+  skipInterceptor?: boolean;
 }
 
 class Http {
-  // 核心请求方法
+  // 🔒 刷新锁：防止多个请求同时触发刷新
+  private isRefreshing = false;
+
+  // ⏳ 请求队列：存储刷新期间失败的请求
+  private requestsQueue: Array<(token: string) => void> = [];
+
   private async request<T>(
     endpoint: string,
     config: HttpConfig = {},
   ): Promise<T> {
     let url = endpoint.startsWith("http") ? endpoint : `${BASE_URL}${endpoint}`;
 
-    // 1. 处理查询参数 (params) -> ?key=value
+    // 1. 处理 params
     if (config.params) {
       const params = new URLSearchParams();
       Object.entries(config.params).forEach(([key, value]) => {
@@ -25,16 +34,17 @@ class Http {
       url += `?${params.toString()}`;
     }
 
-    // 2. 处理 Headers
+    // 2. 动态获取最新的 Token (支持 await tauriLocalStore.get)
     const headers = new Headers(config.headers);
 
-    // 自动携带 Token
-    const token = localStorage.getItem("token");
+    // 注意：这里我们优先从 tauriLocalStore 读取，因为它是持久化的源头
+    // 实际项目中建议在内存维护一个 cachedToken 变量以提高性能，这里简化直接读
+    const token = await tauriLocalStore.get<string>("token");
+
     if (token) {
       headers.set("Authorization", `Bearer ${token}`);
     }
 
-    // 如果没有手动设置 Content-Type，且不是 FormData (上传文件)，默认设置为 JSON
     if (!headers.has("Content-Type") && !(config.body instanceof FormData)) {
       headers.set("Content-Type", "application/json");
     }
@@ -45,31 +55,124 @@ class Http {
       headers,
     });
 
-    // 4. 统一错误处理
-    if (!response.ok) {
-      // 处理 401 未登录
-      if (response.status === 401) {
-        // 这里可以做一些清理工作，或者抛出特定错误让上层捕获跳转
-        // localStorage.removeItem("token");
+    // 4. 🎯 核心拦截逻辑：处理 401 过期
+    if (response.status === 401 && !config.skipInterceptor) {
+      console.log(`[HTTP] Token 过期，拦截请求: ${endpoint}`);
+
+      // 如果正在刷新，则将当前请求挂起放入队列
+      if (this.isRefreshing) {
+        return new Promise<T>((resolve) => {
+          this.requestsQueue.push(() => {
+            // 队列里的请求重新执行时，不需要再次传 token，因为 request 内部会重新获取
+            resolve(this.request<T>(endpoint, config));
+          });
+        });
       }
 
+      // 如果没有在刷新，开启刷新状态
+      this.isRefreshing = true;
+
+      try {
+        // 尝试刷新 Token
+        const success = await this.doRefreshToken();
+
+        if (success) {
+          // 刷新成功：重试队列中的请求 + 重试当前请求
+          this.processQueue();
+          return this.request<T>(endpoint, config);
+        } else {
+          // 刷新失败（Refresh Token 也过期了）：登出
+          await this.handleLogout();
+          throw new Error("会话已过期，请重新登录");
+        }
+      } catch (e) {
+        // 发生异常也登出
+        await this.handleLogout();
+        throw e;
+      } finally {
+        // 无论成功失败，释放锁
+        this.isRefreshing = false;
+      }
+    }
+
+    // 5. 其他错误处理
+    if (!response.ok) {
       const errorBody = await response.text();
       throw new Error(`HTTP Error ${response.status}: ${errorBody}`);
     }
 
-    // 5. 返回 JSON 数据
-    // 如果后端返回空（比如 204 No Content），这里可能会报错，需要根据实际情况调整
-    return response.json();
+    // 6. 返回结果
+    // 某些接口可能返回空体 (204)
+    const text = await response.text();
+    return (text ? JSON.parse(text) : {}) as T;
   }
 
-  // --- 暴露出的类似 Axios 的 API ---
+  // --- 辅助方法 ---
 
-  // GET 请求
+  /**
+   * 执行 Token 刷新逻辑
+   */
+  private async doRefreshToken(): Promise<boolean> {
+    try {
+      // 获取 Refresh Token (假设你登录时存了)
+      const refreshToken = await tauriLocalStore.get<string>("refreshToken");
+
+      if (!refreshToken) return false;
+
+      // 🔥 注意：这里必须设置 skipInterceptor: true，防止死循环
+      // 我们用 request 方法发请求，但如果是 axios 可以用纯 fetch
+      const res = await this.post<{
+        accessToken: string;
+        refreshToken: string;
+      }>("/auth/refresh", { refreshToken }, { skipInterceptor: true });
+
+      console.log("[HTTP] Token 刷新成功");
+
+      // 更新本地存储
+      await tauriLocalStore.set("token", res.accessToken);
+      // 如果后端支持 refresh token 轮转，也要更新 refresh token
+      if (res.refreshToken) {
+        await tauriLocalStore.set("refresh_token", res.refreshToken);
+      }
+      await tauriLocalStore.save(); // 记得保存到文件
+
+      return true;
+    } catch (error) {
+      console.error("[HTTP] Token 刷新失败:", error);
+      return false;
+    }
+  }
+
+  /**
+   * 处理队列中的等待请求
+   */
+  private processQueue() {
+    this.requestsQueue.forEach((callback) => callback(""));
+    this.requestsQueue = [];
+  }
+
+  /**
+   * 彻底登出
+   */
+  private async handleLogout() {
+    console.log("[HTTP] 强制登出");
+    await tauriLocalStore.set("token", null);
+    await tauriLocalStore.set("refresh_token", null);
+    await tauriLocalStore.save();
+
+    toast.error("登录已过期，请重新登录");
+
+    // 强制跳转登录页
+    window.location.href =
+      "/login?redirect=" + encodeURIComponent(window.location.href);
+  }
+
+  // --- API 暴露 ---
+
   public get<T>(url: string, config?: HttpConfig) {
     return this.request<T>(url, { ...config, method: "GET" });
   }
 
-  // POST 请求 (自动处理 data 为 JSON)
   public post<T>(url: string, data?: any, config?: HttpConfig) {
     return this.request<T>(url, {
       ...config,
@@ -78,7 +181,6 @@ class Http {
     });
   }
 
-  // PUT 请求
   public put<T>(url: string, data?: any, config?: HttpConfig) {
     return this.request<T>(url, {
       ...config,
@@ -102,5 +204,4 @@ class Http {
   }
 }
 
-// 导出单例对象
 export const http = new Http();
