@@ -25,6 +25,7 @@ const listUsersRoute = createRoute({
   path: "/",
   summary: "获取用户列表",
   security: [{ Bearer: [] }], // 声明需要 JWT 认证
+  middleware: requireRole([Role.ADMIN]), // 添加 ADMIN 权限中间件
   responses: {
     200: { description: "成功获取用户列表" },
     401: { description: "token过期" },
@@ -32,7 +33,7 @@ const listUsersRoute = createRoute({
   },
 });
 
-userRouter.openapi(listUsersRoute, requireRole([Role.ADMIN]), async (c) => {
+userRouter.openapi(listUsersRoute, async (c) => {
   const res = await db.query.users.findMany({
     columns: {
       id: true,
