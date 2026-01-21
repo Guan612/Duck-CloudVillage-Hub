@@ -31,7 +31,7 @@ cartRoter.openapi(listUserCartRouter, async (c) => {
   const userId = payload.userId;
 
   const res = await db.query.carts.findMany({
-    where: eq(userId, userId),
+    where: eq(carts.userId, userId),
   });
   return c.json(success(res));
 });
@@ -107,7 +107,7 @@ cartRoter.openapi(deletUserCartRouter, async (c) => {
 
   const res = await db
     .delete(carts)
-    .where(eq(carts.id, Number(cartId)) && eq(userId, Number(userId)))
+    .where(eq(carts.id, Number(cartId)) && eq(carts.userId, userId))
     .returning;
 
   if (!res) {
