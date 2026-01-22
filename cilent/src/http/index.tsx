@@ -1,6 +1,7 @@
 import { tauriLocalStore } from "@/store/tauriStore";
 import { fetch } from "@tauri-apps/plugin-http";
 import { toast } from "sonner";
+import type { ApiResponses } from "@/types/api-responses";
 
 // 基础配置
 const BASE_URL = "http://localhost:3000/api"; // 替换你的后端地址
@@ -204,3 +205,20 @@ class Http {
 }
 
 export const http = new Http();
+
+// 类型化的API调用辅助函数
+export function typedGet<K extends keyof ApiResponses>(url: K, config?: HttpConfig) {
+  return http.get<ApiResponses[K]["data"]>(url as string, config);
+}
+
+export function typedPost<K extends keyof ApiResponses>(url: K, data?: any, config?: HttpConfig) {
+  return http.post<ApiResponses[K]["data"]>(url as string, data, config);
+}
+
+export function typedPatch<K extends keyof ApiResponses>(url: K, data?: any, config?: HttpConfig) {
+  return http.patch<ApiResponses[K]["data"]>(url as string, data, config);
+}
+
+export function typedDelete<K extends keyof ApiResponses>(url: K, config?: HttpConfig) {
+  return http.delete<ApiResponses[K]["data"]>(url as string, config);
+}
