@@ -1,13 +1,15 @@
 import { http } from ".";
+import type { Product } from "@/types/api-responses";
+import type { ApiResponse } from "@/types/api";
 
 // 获取商品列表
 export const getProductApi = () => {
-  return http.get("/product");
+  return http.get<ApiResponse<Product[]>>("/product");
 };
 
 // 获取商品详情
 export const getProductDetailApi = (id: number) => {
-  return http.get(`/product/${id}`);
+  return http.get<ApiResponse<Product>>(`/product/${id}`);
 };
 
 // 创建商品（需要管理员权限）
@@ -19,7 +21,7 @@ export const createProductApi = (data: {
   quantity: number;
   category?: string;
 }) => {
-  return http.post("/product", data);
+  return http.post<ApiResponse<Product>>("/product", data);
 };
 
 // 更新商品（需要管理员权限）
@@ -31,5 +33,5 @@ export const updateProductApi = (id: number, data: {
   quantity?: number;
   category?: string;
 }) => {
-  return http.patch(`/product/${id}`, data);
+  return http.patch<ApiResponse<Product>>(`/product/${id}`, data);
 };
