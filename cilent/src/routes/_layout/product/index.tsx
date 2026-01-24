@@ -1,15 +1,17 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Search, Filter, ShoppingBag, Coins, ShoppingCart } from "lucide-react";
+import { Search, Filter, ShoppingBag, Coins, ShoppingCart, Loader2, RefreshCw } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
+import useProduct from "@/hooks/product/useProduct";
+import type { Product } from "@/types/api-responses";
 
 export const Route = createFileRoute("/_layout/product/")({
   component: ProductListPage,
 });
 
-// --- 模拟数据 ---
+// --- 分类数据 ---
 const CATEGORIES = [
   "全部",
   "时令水果",
@@ -19,64 +21,9 @@ const CATEGORIES = [
   "粮油干货",
 ];
 
-const PRODUCTS = [
-  {
-    id: "101",
-    title: "高山有机红富士苹果 (12个装)",
-    image:
-      "https://images.unsplash.com/photo-1560806887-1e4cd0b6cbd6?q=80&w=400&auto=format&fit=crop",
-    points: 1200,
-    tags: ["助农", "包邮"],
-    sales: 342,
-  },
-  {
-    id: "102",
-    title: "农家散养土鸡蛋 (30枚)",
-    image:
-      "https://images.unsplash.com/photo-1516467508483-a7212febe31a?q=80&w=400&auto=format&fit=crop",
-    points: 800,
-    tags: ["热销"],
-    sales: 1205,
-  },
-  {
-    id: "103",
-    title: "手工编织竹篮/收纳筐",
-    image:
-      "https://images.unsplash.com/photo-1598532163257-5264858b2912?q=80&w=400&auto=format&fit=crop",
-    points: 2500,
-    tags: ["非遗"],
-    sales: 56,
-  },
-  {
-    id: "104",
-    title: "林芝松茸干片 (50g)",
-    image:
-      "https://images.unsplash.com/photo-1599818685453-93d396860bc8?q=80&w=400&auto=format&fit=crop",
-    points: 5800,
-    tags: ["特产"],
-    sales: 89,
-  },
-  {
-    id: "105",
-    title: "云上乡村·星空露营券",
-    image:
-      "https://images.unsplash.com/photo-1478131143081-80f7f84ca84d?q=80&w=400&auto=format&fit=crop",
-    points: 12000,
-    tags: ["体验"],
-    sales: 12,
-  },
-  {
-    id: "106",
-    title: "古法压榨菜籽油 (5L)",
-    image:
-      "https://images.unsplash.com/photo-1474979266404-7eaacbcd03a2?q=80&w=400&auto=format&fit=crop",
-    points: 3200,
-    tags: [],
-    sales: 210,
-  },
-];
-
 function ProductListPage() {
+  const { products, loading, error, getProducts } = useProduct();
+
   return (
     <div className="min-h-full pb-4 bg-background">
       {/* --- 第一部分：标题栏 (普通流，会随页面滚动消失) --- */}
@@ -125,11 +72,46 @@ function ProductListPage() {
 
       {/* --- 第四部分：产品列表 --- */}
       <div className="px-4">
-        <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-4">
-          {PRODUCTS.map((product) => (
-            <ProductCard key={product.id} data={product} />
-          ))}
-        </div>
+        {/* 加载状态 */}
+        {loading && (
+          <div className="flex flex-col items-center justify-center py-12">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            <p className="mt-2 text-sm text-muted-foreground">加载中...</p>
+          </div>
+        )}
+
+        {/* 错误状态 */}
+        {error && (
+          <div className="flex flex-col items-center justify-center py-12">
+            <p className="text-sm text-destructive mb-3">{error}</p>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={getProducts}
+              className="gap-2"
+            >
+              <RefreshCw size={14} />
+              重新加载
+            </Button>
+          </div>
+        )}
+
+        {/* 正常状态 */}
+        {!loading && !error && products.length > 0 && (
+          <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-4">
+            {products.map((product) => (
+              <ProductCard key={product.id} data={product} />
+            ))}
+          </div>
+        )}
+
+        {/* 空状态 */}
+        {!loading && !error && products.length === 0 && (
+          <div className="flex flex-col items-center justify-center py-12">
+            <ShoppingBag className="h-12 w-12 text-muted-foreground/50 mb-3" />
+            <p className="text-sm text-muted-foreground">暂无商品</p>
+          </div>
+        )}
 
         <div className="py-6 text-center text-xs text-muted-foreground">
           - 更多好物正在上架中 -
@@ -147,54 +129,41 @@ function ProductListPage() {
 }
 
 // --- 子组件：产品卡片 ---
-function ProductCard({ data }: { data: (typeof PRODUCTS)[0] }) {
+function ProductCard({ data }: { data: Product }) {
   return (
     // 使用 Link 包裹整个卡片，点击跳转详情页
     // 这里假设详情页路由是 /product/$productId
     <Link
       to="/product/$productId"
-      params={{ productId: data.id }}
+      params={{ productId: String(data.id) }}
       className="group block"
     >
       <Card className="overflow-hidden border-none shadow-sm transition-all duration-300 hover:shadow-md hover:-translate-y-1 active:scale-95 bg-card">
         {/* 图片区域 */}
         <div className="relative aspect-square overflow-hidden bg-muted">
           <img
-            src={data.image}
-            alt={data.title}
+            src={data.imgUrl || "https://images.unsplash.com/photo-1560806887-1e4cd0b6cbd6?q=80&w=400&auto=format&fit=crop"}
+            alt={data.name}
             className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
           />
-          {/* 如果有 Tag 显示在左上角 */}
-          {data.tags.length > 0 && (
-            <div className="absolute left-2 top-2 flex flex-col gap-1">
-              {data.tags.map((tag) => (
-                <Badge
-                  key={tag}
-                  className="bg-red-500/90 hover:bg-red-500 text-[10px] px-1.5 h-5 backdrop-blur-sm border-none shadow-sm"
-                >
-                  {tag}
-                </Badge>
-              ))}
-            </div>
-          )}
         </div>
 
         {/* 内容区域 */}
         <CardContent className="p-3">
           <h3 className="line-clamp-2 text-sm font-medium text-foreground min-h-[2.5em]">
-            {data.title}
+            {data.name}
           </h3>
 
           <div className="mt-2 flex items-baseline gap-1">
             <span className="text-lg font-bold text-primary">
-              {data.points}
+              {data.price}
             </span>
             <span className="text-xs text-muted-foreground">积分</span>
           </div>
         </CardContent>
 
         <CardFooter className="p-3 pt-0 flex items-center justify-between text-xs text-muted-foreground">
-          <span>已兑 {data.sales}</span>
+          <span>库存: {data.quantity}</span>
           <div className="h-6 w-6 rounded-full bg-primary/10 flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-white transition-colors">
             <ShoppingBag size={12} />
           </div>
