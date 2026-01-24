@@ -28,9 +28,11 @@ export const insertUserSchema = createInsertSchema(users, {
   password: (schema) => schema.min(6, "密码至少需要6位"),
   nickname: (schema) => schema.max(20, "昵称过长"),
   avatarUrl: (_) => z.url().min(3, "头像必须是合法的URL"),
-  role: (schema) => schema.int().min(0).max(2), // 限制角色范围 0-2
-  balance: (schema) => schema.int().nonnegative("余额不能为负数"),
+  //role: (schema) => schema.int().min(0).max(2), // 限制角色范围 0-2
+  // balance: (schema) => schema.int().nonnegative("余额不能为负数"),
 }).omit({
+  role: true,
+  balance: true,
   createdAt: true,
   updatedAt: true,
 });
