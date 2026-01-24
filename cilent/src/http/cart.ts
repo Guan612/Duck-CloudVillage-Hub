@@ -1,4 +1,6 @@
+import { CartItem } from "@/types/api-responses";
 import { http } from ".";
+import { AddToCartParams } from "@/types/api-reqest";
 
 // 获取用户购物车
 export const getCartApi = () => {
@@ -6,12 +8,15 @@ export const getCartApi = () => {
 };
 
 // 添加商品到购物车
-export const addToCartApi = (data: { productId: number; quantity: number }) => {
-  return http.post("/cart", data);
+export const addToCartApi = (data: AddToCartParams) => {
+  return http.post<CartItem>("/cart", data);
 };
 
 // 更新购物车商品数量
-export const updateCartItemApi = (id: number, data: { quantity: number; checked?: boolean }) => {
+export const updateCartItemApi = (
+  id: number,
+  data: { quantity: number; checked?: boolean },
+) => {
   return http.post(`/cart/${id}`, data);
 };
 

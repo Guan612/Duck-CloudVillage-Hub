@@ -1,7 +1,8 @@
 import { tauriLocalStore } from "@/store/tauriStore";
 import { fetch } from "@tauri-apps/plugin-http";
 import { toast } from "sonner";
-import type { ApiResponses } from "@/types/api-responses";
+import { ApiResponse } from "@/types/api";
+import { RefreshTokenResponse } from "@/types/api-responses";
 
 // 基础配置
 const BASE_URL = "http://localhost:3000/api"; // 替换你的后端地址
@@ -23,7 +24,7 @@ class Http {
   private async request<T>(
     endpoint: string,
     config: HttpConfig = {},
-  ): Promise<T> {
+  ): Promise<ApiResponse<T>> {
     let url = endpoint.startsWith("http") ? endpoint : `${BASE_URL}${endpoint}`;
 
     // 1. 处理 params
@@ -62,7 +63,7 @@ class Http {
 
       // 如果正在刷新，则将当前请求挂起放入队列
       if (this.isRefreshing) {
-        return new Promise<T>((resolve) => {
+        return new Promise<ApiResponse<T>>((resolve) => {
           this.requestsQueue.push(() => {
             // 队列里的请求重新执行时，不需要再次传 token，因为 request 内部会重新获取
             resolve(this.request<T>(endpoint, config));
@@ -105,7 +106,15 @@ class Http {
     // 6. 返回结果
     // 某些接口可能返回空体 (204)
     const text = await response.text();
-    return (text ? JSON.parse(text) : {}) as T;
+    if (!text) {
+      return {} as unknown as ApiResponse<T>;
+    }
+
+    try {
+      return JSON.parse(text) as ApiResponse<T>;
+    } catch {
+      return {} as unknown as ApiResponse<T>;
+    }
   }
 
   // --- 辅助方法 ---
@@ -122,21 +131,26 @@ class Http {
 
       // 🔥 注意：这里必须设置 skipInterceptor: true，防止死循环
       // 我们用 request 方法发请求，但如果是 axios 可以用纯 fetch
-      const res = await this.post<{
-        data: { accessToken: string; refreshToken?: string };
-      }>("/auth/refresh", { refreshToken }, { skipInterceptor: true });
+      const res = await this.post<RefreshTokenResponse>(
+        "/auth/refresh",
+        { refreshToken },
+        { skipInterceptor: true },
+      );
 
       console.log("[HTTP] Token 刷新成功");
 
-      // 更新本地存储
-      await tauriLocalStore.set("token", res.data.accessToken);
-      // 如果后端支持 refresh token 轮转，也要更新 refresh token
-      if (res.data.refreshToken) {
-        await tauriLocalStore.set("refreshToken", res.data.refreshToken);
+      if (res.code === 0 && res.data) {
+        // 根据你的业务码调整
+        console.log("[HTTP] Token 刷新成功");
+        await tauriLocalStore.set("token", res.data.accessToken);
+        if (res.data.refreshToken) {
+          await tauriLocalStore.set("refreshToken", res.data.refreshToken);
+        }
+        await tauriLocalStore.save();
+        return true;
       }
-      await tauriLocalStore.save(); // 记得保存到文件
 
-      return true;
+      return false;
     } catch (error) {
       console.error("[HTTP] Token 刷新失败:", error);
       return false;
@@ -205,20 +219,3 @@ class Http {
 }
 
 export const http = new Http();
-
-// 类型化的API调用辅助函数
-export function typedGet<K extends keyof ApiResponses>(url: K, config?: HttpConfig) {
-  return http.get<ApiResponses[K]["data"]>(url as string, config);
-}
-
-export function typedPost<K extends keyof ApiResponses>(url: K, data?: any, config?: HttpConfig) {
-  return http.post<ApiResponses[K]["data"]>(url as string, data, config);
-}
-
-export function typedPatch<K extends keyof ApiResponses>(url: K, data?: any, config?: HttpConfig) {
-  return http.patch<ApiResponses[K]["data"]>(url as string, data, config);
-}
-
-export function typedDelete<K extends keyof ApiResponses>(url: K, config?: HttpConfig) {
-  return http.delete<ApiResponses[K]["data"]>(url as string, config);
-}
