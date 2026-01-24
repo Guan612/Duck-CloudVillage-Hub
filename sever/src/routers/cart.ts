@@ -1,11 +1,11 @@
 import { createRoute, OpenAPIHono } from "@hono/zod-openapi";
 import { db } from "../db";
-import { eq } from "drizzle-orm";
+import { and, eq, gte, sql } from "drizzle-orm";
 import { fail, success } from "../utils/result";
 import { jwt } from "hono/jwt";
 import { appConfig } from "../config";
 import { insertCartSchema, updateCartSchema } from "../validators";
-import { carts } from "../db/schema";
+import { carts, products } from "../db/schema";
 import { useTranslation } from "@intlify/hono";
 
 const cartRoter = new OpenAPIHono();
@@ -32,6 +32,17 @@ cartRoter.openapi(listUserCartRouter, async (c) => {
 
   const res = await db.query.carts.findMany({
     where: eq(carts.userId, userId),
+    with: {
+      product: {
+        columns: {
+          id: true,
+          name: true,
+          quantity: true,
+          price: true,
+          imgUrl: true,
+        },
+      }, // 这里的 product 对应上面 relations 里定义的字段名
+    },
   });
   return c.json(success(res));
 });
@@ -52,9 +63,26 @@ const insertUserCartRouter = createRoute({
 });
 
 cartRoter.openapi(insertUserCartRouter, async (c) => {
+  const t = await useTranslation(c);
   const payload = c.get("jwtPayload");
   const userId = payload.userId;
   const data = c.req.valid("json");
+  const productQuantity = await db
+    .update(products)
+    .set({
+      quantity: sql`${products.quantity} - ${data.quantity}`,
+    })
+    .where(
+      and(
+        eq(products.id, data.productId),
+        gte(products.quantity, data.quantity),
+      ),
+    );
+
+  if (!productQuantity) {
+    return c.json(fail(t("cart.err.quantity")));
+  }
+
   const res = await db
     .insert(carts)
     .values({ ...data, userId: Number(userId) })
