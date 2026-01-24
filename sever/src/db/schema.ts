@@ -136,6 +136,7 @@ export const usersRelations = relations(users, ({ many }) => ({
   orders: many(orders),
   articles: many(articles),
   feedbacks: many(feedbacks),
+  carts: many(carts),
 }));
 
 export const ordersRelations = relations(orders, ({ one, many }) => ({
@@ -155,4 +156,16 @@ export const orderListRelations = relations(orderList, ({ one }) => ({
     fields: [orderList.productId],
     references: [products.id],
   }),
+}));
+
+export const cartsRelations = relations(carts, ({ one }) => ({
+  // one 表示一条购物车记录对应一个产品
+  product: one(products, {
+    fields: [carts.productId], // 当前表的外键列
+    references: [products.id], // 关联目标表的主键列
+  }),
+}));
+
+export const productsRelations = relations(products, ({ many }) => ({
+  carts: many(carts),
 }));
