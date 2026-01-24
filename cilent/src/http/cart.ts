@@ -4,7 +4,7 @@ import { AddToCartParams } from "@/types/api-reqest";
 
 // 获取用户购物车
 export const getCartApi = () => {
-  return http.get("/cart");
+  return http.get<CartItem[]>("/cart");
 };
 
 // 添加商品到购物车
