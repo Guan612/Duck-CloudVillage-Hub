@@ -12,10 +12,15 @@ export default {
       user_exit: "用户已存在，请登录",
       permisson: "权限不足",
       token: "Token无效",
-      token_refresh:"Token刷新错误"
+      token_refresh: "Token刷新错误",
     },
     scucces: {
       login: "登录成功",
+    },
+  },
+  cart: {
+    err: {
+      quantity: "数量不足",
     },
   },
 };
