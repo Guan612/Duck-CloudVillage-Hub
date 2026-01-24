@@ -46,15 +46,17 @@ export default function useLogin({ redirect }: UseLoginProps) {
       // 发起请求 (使用我们封装的 http 类)
       // 假设后端返回结构: { token: "..." }
       const res = await loginApi(values);
-      console.log(res);
+      if (res.code == 0 && res.data) {
+        setToken(res.data.token);
+        setRefreshToken(res.data.refreshToken);
+
+        setUserInfo(res.data.user);
+
+        toast.success("登录成功");
+      }
 
       // 保存 Token
-      setToken(res.data.token);
-      setRefreshToken(res.data.refreshToken);
 
-      setUserInfo(res.data.user);
-
-      toast.success("登录成功");
 
       // 2. 关键：通知路由系统状态已过期，需要重新加载数据和权限检查
       await router.invalidate();
