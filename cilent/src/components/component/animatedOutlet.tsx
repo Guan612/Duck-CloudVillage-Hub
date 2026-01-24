@@ -67,7 +67,7 @@ export const AnimatedOutlet = () => {
         {/* w-full: 占满父级宽度 */}
         {/* md:max-w-4xl: 在大屏下限制最大宽度 */}
         {/* p-4 pb-safe md:p-6: 统一的内边距 */}
-        <div className="w-full h-full p-4 pb-safe md:p-6 md:max-w-4xl relative">
+        <div className="w-full h-full p-2 pb-safe md:p-6 md:max-w-4xl relative">
           <RenderedOutlet />
         </div>
       </motion.div>
