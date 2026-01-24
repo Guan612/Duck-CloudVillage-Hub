@@ -13,12 +13,14 @@ import { Route as SubRouteImport } from './routes/_sub'
 import { Route as LayoutRouteImport } from './routes/_layout'
 import { Route as LayoutIndexRouteImport } from './routes/_layout/index'
 import { Route as SubSettingIndexRouteImport } from './routes/_sub/setting/index'
+import { Route as SubOrderIndexRouteImport } from './routes/_sub/order/index'
 import { Route as SubCartIndexRouteImport } from './routes/_sub/cart/index'
 import { Route as LayoutProductIndexRouteImport } from './routes/_layout/product/index'
 import { Route as LayoutMeIndexRouteImport } from './routes/_layout/me/index'
 import { Route as LayoutFeedbackIndexRouteImport } from './routes/_layout/feedback/index'
 import { Route as LayoutAboutIndexRouteImport } from './routes/_layout/about/index'
 import { Route as SubProductProductIdRouteImport } from './routes/_sub/product/$productId'
+import { Route as SubOrderOrderIdRouteImport } from './routes/_sub/order/$orderId'
 import { Route as SubMeEditUserInfoRouteImport } from './routes/_sub/me/editUserInfo'
 import { Route as SubFeedbackAddFeedbackRouteImport } from './routes/_sub/feedback/addFeedback'
 import { Route as SubFeedbackFeedbackIdRouteImport } from './routes/_sub/feedback/$feedbackId'
@@ -40,6 +42,11 @@ const LayoutIndexRoute = LayoutIndexRouteImport.update({
 const SubSettingIndexRoute = SubSettingIndexRouteImport.update({
   id: '/setting/',
   path: '/setting/',
+  getParentRoute: () => SubRoute,
+} as any)
+const SubOrderIndexRoute = SubOrderIndexRouteImport.update({
+  id: '/order/',
+  path: '/order/',
   getParentRoute: () => SubRoute,
 } as any)
 const SubCartIndexRoute = SubCartIndexRouteImport.update({
@@ -72,6 +79,11 @@ const SubProductProductIdRoute = SubProductProductIdRouteImport.update({
   path: '/product/$productId',
   getParentRoute: () => SubRoute,
 } as any)
+const SubOrderOrderIdRoute = SubOrderOrderIdRouteImport.update({
+  id: '/order/$orderId',
+  path: '/order/$orderId',
+  getParentRoute: () => SubRoute,
+} as any)
 const SubMeEditUserInfoRoute = SubMeEditUserInfoRouteImport.update({
   id: '/me/editUserInfo',
   path: '/me/editUserInfo',
@@ -99,12 +111,14 @@ export interface FileRoutesByFullPath {
   '/feedback/$feedbackId': typeof SubFeedbackFeedbackIdRoute
   '/feedback/addFeedback': typeof SubFeedbackAddFeedbackRoute
   '/me/editUserInfo': typeof SubMeEditUserInfoRoute
+  '/order/$orderId': typeof SubOrderOrderIdRoute
   '/product/$productId': typeof SubProductProductIdRoute
   '/about': typeof LayoutAboutIndexRoute
   '/feedback': typeof LayoutFeedbackIndexRoute
   '/me': typeof LayoutMeIndexRoute
   '/product': typeof LayoutProductIndexRoute
   '/cart': typeof SubCartIndexRoute
+  '/order': typeof SubOrderIndexRoute
   '/setting': typeof SubSettingIndexRoute
 }
 export interface FileRoutesByTo {
@@ -113,12 +127,14 @@ export interface FileRoutesByTo {
   '/feedback/$feedbackId': typeof SubFeedbackFeedbackIdRoute
   '/feedback/addFeedback': typeof SubFeedbackAddFeedbackRoute
   '/me/editUserInfo': typeof SubMeEditUserInfoRoute
+  '/order/$orderId': typeof SubOrderOrderIdRoute
   '/product/$productId': typeof SubProductProductIdRoute
   '/about': typeof LayoutAboutIndexRoute
   '/feedback': typeof LayoutFeedbackIndexRoute
   '/me': typeof LayoutMeIndexRoute
   '/product': typeof LayoutProductIndexRoute
   '/cart': typeof SubCartIndexRoute
+  '/order': typeof SubOrderIndexRoute
   '/setting': typeof SubSettingIndexRoute
 }
 export interface FileRoutesById {
@@ -130,12 +146,14 @@ export interface FileRoutesById {
   '/_sub/feedback/$feedbackId': typeof SubFeedbackFeedbackIdRoute
   '/_sub/feedback/addFeedback': typeof SubFeedbackAddFeedbackRoute
   '/_sub/me/editUserInfo': typeof SubMeEditUserInfoRoute
+  '/_sub/order/$orderId': typeof SubOrderOrderIdRoute
   '/_sub/product/$productId': typeof SubProductProductIdRoute
   '/_layout/about/': typeof LayoutAboutIndexRoute
   '/_layout/feedback/': typeof LayoutFeedbackIndexRoute
   '/_layout/me/': typeof LayoutMeIndexRoute
   '/_layout/product/': typeof LayoutProductIndexRoute
   '/_sub/cart/': typeof SubCartIndexRoute
+  '/_sub/order/': typeof SubOrderIndexRoute
   '/_sub/setting/': typeof SubSettingIndexRoute
 }
 export interface FileRouteTypes {
@@ -146,12 +164,14 @@ export interface FileRouteTypes {
     | '/feedback/$feedbackId'
     | '/feedback/addFeedback'
     | '/me/editUserInfo'
+    | '/order/$orderId'
     | '/product/$productId'
     | '/about'
     | '/feedback'
     | '/me'
     | '/product'
     | '/cart'
+    | '/order'
     | '/setting'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -160,12 +180,14 @@ export interface FileRouteTypes {
     | '/feedback/$feedbackId'
     | '/feedback/addFeedback'
     | '/me/editUserInfo'
+    | '/order/$orderId'
     | '/product/$productId'
     | '/about'
     | '/feedback'
     | '/me'
     | '/product'
     | '/cart'
+    | '/order'
     | '/setting'
   id:
     | '__root__'
@@ -176,12 +198,14 @@ export interface FileRouteTypes {
     | '/_sub/feedback/$feedbackId'
     | '/_sub/feedback/addFeedback'
     | '/_sub/me/editUserInfo'
+    | '/_sub/order/$orderId'
     | '/_sub/product/$productId'
     | '/_layout/about/'
     | '/_layout/feedback/'
     | '/_layout/me/'
     | '/_layout/product/'
     | '/_sub/cart/'
+    | '/_sub/order/'
     | '/_sub/setting/'
   fileRoutesById: FileRoutesById
 }
@@ -218,6 +242,13 @@ declare module '@tanstack/react-router' {
       path: '/setting'
       fullPath: '/setting'
       preLoaderRoute: typeof SubSettingIndexRouteImport
+      parentRoute: typeof SubRoute
+    }
+    '/_sub/order/': {
+      id: '/_sub/order/'
+      path: '/order'
+      fullPath: '/order'
+      preLoaderRoute: typeof SubOrderIndexRouteImport
       parentRoute: typeof SubRoute
     }
     '/_sub/cart/': {
@@ -260,6 +291,13 @@ declare module '@tanstack/react-router' {
       path: '/product/$productId'
       fullPath: '/product/$productId'
       preLoaderRoute: typeof SubProductProductIdRouteImport
+      parentRoute: typeof SubRoute
+    }
+    '/_sub/order/$orderId': {
+      id: '/_sub/order/$orderId'
+      path: '/order/$orderId'
+      fullPath: '/order/$orderId'
+      preLoaderRoute: typeof SubOrderOrderIdRouteImport
       parentRoute: typeof SubRoute
     }
     '/_sub/me/editUserInfo': {
@@ -317,8 +355,10 @@ interface SubRouteChildren {
   SubFeedbackFeedbackIdRoute: typeof SubFeedbackFeedbackIdRoute
   SubFeedbackAddFeedbackRoute: typeof SubFeedbackAddFeedbackRoute
   SubMeEditUserInfoRoute: typeof SubMeEditUserInfoRoute
+  SubOrderOrderIdRoute: typeof SubOrderOrderIdRoute
   SubProductProductIdRoute: typeof SubProductProductIdRoute
   SubCartIndexRoute: typeof SubCartIndexRoute
+  SubOrderIndexRoute: typeof SubOrderIndexRoute
   SubSettingIndexRoute: typeof SubSettingIndexRoute
 }
 
@@ -327,8 +367,10 @@ const SubRouteChildren: SubRouteChildren = {
   SubFeedbackFeedbackIdRoute: SubFeedbackFeedbackIdRoute,
   SubFeedbackAddFeedbackRoute: SubFeedbackAddFeedbackRoute,
   SubMeEditUserInfoRoute: SubMeEditUserInfoRoute,
+  SubOrderOrderIdRoute: SubOrderOrderIdRoute,
   SubProductProductIdRoute: SubProductProductIdRoute,
   SubCartIndexRoute: SubCartIndexRoute,
+  SubOrderIndexRoute: SubOrderIndexRoute,
   SubSettingIndexRoute: SubSettingIndexRoute,
 }
 
