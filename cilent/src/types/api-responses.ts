@@ -4,13 +4,7 @@ import type { ApiResponse } from "./api";
 export interface LoginResponse {
   token: string;
   refreshToken: string;
-  user: {
-    id: number;
-    loginId: string;
-    nickname: string;
-    role: string;
-    avatarUrl?: string;
-  };
+  user: UserInfo;
 }
 
 export interface RegisterResponse {
@@ -85,6 +79,14 @@ export interface User {
   updatedAt: Date;
 }
 
+export interface UserInfo {
+  id: number;
+  loginId: string;
+  nickname: string;
+  role: string;
+  avatarUrl?: string;
+}
+
 export interface UpdateProfileResponse {
   id: number;
   loginId: string;
@@ -119,25 +121,25 @@ export type ApiResponses = {
   "/auth/login": ApiResponse<LoginResponse>;
   "/auth/register": ApiResponse<RegisterResponse>;
   "/auth/refresh": ApiResponse<RefreshTokenResponse>;
-  
+
   // 商品
   "/product": ApiResponse<Product[]>;
   "/product/{id}": ApiResponse<Product>;
-  
+
   // 购物车
   "/cart": ApiResponse<CartItem[]>;
   "/cart/{id}": ApiResponse<CartItem>;
-  
+
   // 订单
   "/order": ApiResponse<Order[]>;
   "/order/{id}": ApiResponse<Order>;
   "/order/{id}/status": ApiResponse<Order>;
-  
+
   // 用户
   "/user": ApiResponse<User[]>;
   "/user/{id}": ApiResponse<User>;
   "/user/": ApiResponse<UpdateProfileResponse>;
-  
+
   // 反馈
   "/feedback": ApiResponse<Feedback[]>;
   "/feedback/{id}": ApiResponse<Feedback>;
