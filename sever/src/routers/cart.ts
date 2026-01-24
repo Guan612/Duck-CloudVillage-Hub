@@ -55,7 +55,10 @@ cartRoter.openapi(insertUserCartRouter, async (c) => {
   const payload = c.get("jwtPayload");
   const userId = payload.userId;
   const data = c.req.valid("json");
-  const res = await db.insert(carts).values({ ...data, userId }).returning;
+  const res = await db
+    .insert(carts)
+    .values({ ...data, userId: Number(userId) })
+    .returning();
   return c.json(success(res));
 });
 
@@ -108,7 +111,7 @@ cartRoter.openapi(deletUserCartRouter, async (c) => {
   const res = await db
     .delete(carts)
     .where(eq(carts.id, Number(cartId)) && eq(carts.userId, userId))
-    .returning;
+    .returning();
 
   if (!res) {
     return c.json(fail(t("param_error")), 404);
