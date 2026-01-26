@@ -2,8 +2,8 @@ import { OpenAPIHono, createRoute, z } from "@hono/zod-openapi";
 import { jwt } from "hono/jwt";
 import { appConfig } from "../config";
 import { db } from "../db";
-import { eq, and, desc } from "drizzle-orm";
-import { feedbacks, users } from "../db/schema";
+import { eq, and, desc, sql } from "drizzle-orm";
+import { feedbacks, users, feedbackLikes, feedbackComments, feedbackReplies } from "../db/schema";
 import { insertFeedbackSchema } from "../validators";
 import { fail, success } from "../utils/result";
 import { useTranslation } from "@intlify/hono";
@@ -38,11 +38,12 @@ feedbacksRouter.openapi(listFeedbacksRoute, async (c) => {
   const userId = payload.userId;
   const { status } = c.req.valid("query");
 
-  const whereCondition = status 
+  const whereCondition = status
     ? and(eq(feedbacks.giver, userId), eq(feedbacks.status, Number(status)))
     : eq(feedbacks.giver, userId);
 
-  const res = await db.query.feedbacks.findMany({
+  // 获取反馈列表
+  const feedbackList = await db.query.feedbacks.findMany({
     where: whereCondition,
     orderBy: (feedbacks, { desc }) => [desc(feedbacks.createdAt)],
     with: {
@@ -64,6 +65,36 @@ feedbacksRouter.openapi(listFeedbacksRoute, async (c) => {
       },
     },
   });
+
+  // 为每个反馈添加统计数据
+  const res = await Promise.all(
+    feedbackList.map(async (feedback) => {
+      // 获取点赞数
+      const likesCountResult = await db
+        .select({ count: sql<number>`count(*)` })
+        .from(feedbackLikes)
+        .where(eq(feedbackLikes.feedbackId, feedback.id));
+      
+      // 获取评论数
+      const commentsCountResult = await db
+        .select({ count: sql<number>`count(*)` })
+        .from(feedbackComments)
+        .where(eq(feedbackComments.feedbackId, feedback.id));
+      
+      // 检查是否有官方回复
+      const replyCountResult = await db
+        .select({ count: sql<number>`count(*)` })
+        .from(feedbackReplies)
+        .where(eq(feedbackReplies.feedbackId, feedback.id));
+
+      return {
+        ...feedback,
+        likesCount: Number(likesCountResult[0]?.count || 0),
+        commentsCount: Number(commentsCountResult[0]?.count || 0),
+        hasReply: Number(replyCountResult[0]?.count || 0) > 0,
+      };
+    })
+  );
 
   return c.json(success(res), 200);
 });
@@ -90,7 +121,7 @@ feedbacksRouter.openapi(getFeedbackRoute, async (c) => {
   const userId = payload.userId;
   const { id } = c.req.valid("param");
 
-  const res = await db.query.feedbacks.findFirst({
+  const feedback = await db.query.feedbacks.findFirst({
     where: and(eq(feedbacks.id, Number(id)), eq(feedbacks.giver, userId)),
     with: {
       giverUser: {
@@ -112,9 +143,43 @@ feedbacksRouter.openapi(getFeedbackRoute, async (c) => {
     },
   });
 
-  if (!res) {
+  if (!feedback) {
     return c.json(fail("反馈不存在"), 404);
   }
+
+  // 获取点赞数
+  const likesCountResult = await db
+    .select({ count: sql<number>`count(*)` })
+    .from(feedbackLikes)
+    .where(eq(feedbackLikes.feedbackId, feedback.id));
+  
+  // 获取评论数
+  const commentsCountResult = await db
+    .select({ count: sql<number>`count(*)` })
+    .from(feedbackComments)
+    .where(eq(feedbackComments.feedbackId, feedback.id));
+  
+  // 检查是否有官方回复
+  const replyCountResult = await db
+    .select({ count: sql<number>`count(*)` })
+    .from(feedbackReplies)
+    .where(eq(feedbackReplies.feedbackId, feedback.id));
+
+  // 检查当前用户是否已点赞
+  const isLikedResult = await db.query.feedbackLikes.findFirst({
+    where: and(
+      eq(feedbackLikes.feedbackId, feedback.id),
+      eq(feedbackLikes.userId, userId),
+    ),
+  });
+
+  const res = {
+    ...feedback,
+    likesCount: Number(likesCountResult[0]?.count || 0),
+    commentsCount: Number(commentsCountResult[0]?.count || 0),
+    hasReply: Number(replyCountResult[0]?.count || 0) > 0,
+    isLiked: !!isLikedResult,
+  };
 
   return c.json(success(res), 200);
 });
@@ -144,7 +209,9 @@ feedbacksRouter.openapi(createFeedbackRoute, async (c) => {
   const [newFeedback] = await db
     .insert(feedbacks)
     .values({
-      ...data,
+      title: data.title,
+      content: data.content,
+      imageUrls: data.imageUrls || null,
       giver: userId,
       status: 0,
     })
