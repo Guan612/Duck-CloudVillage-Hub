@@ -4,6 +4,7 @@ import api from "./routers"; // 你的路由汇聚文件
 import { i18n } from "./middleware/i18n";
 import { OpenAPIHono } from "@hono/zod-openapi";
 import { Scalar } from "@scalar/hono-api-reference"; // 推荐使用 Scalar UI
+import { startCronJobs } from "./cron";
 
 const app = new OpenAPIHono();
 
@@ -40,5 +41,8 @@ app.get(
 
 // 5. 导出类型给前端使用
 export type AppType = typeof routes;
+
+// 6. 启动定时任务
+startCronJobs();
 
 export default app;
