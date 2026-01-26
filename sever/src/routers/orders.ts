@@ -2,7 +2,7 @@ import { OpenAPIHono, createRoute, z } from "@hono/zod-openapi";
 import { jwt } from "hono/jwt";
 import { appConfig } from "../config";
 import { db } from "../db";
-import { eq, and, sql } from "drizzle-orm";
+import { eq, and, sql, inArray } from "drizzle-orm";
 import { orders, orderList, products } from "../db/schema";
 import { insertOrderSchema, insertOrderListSchema } from "../validators";
 import { fail, success } from "../utils/result";
@@ -38,9 +38,11 @@ ordersRouter.openapi(listOrdersRoute, async (c) => {
   const { status } = c.req.valid("query");
 
   const whereCondition = eq(orders.userId, userId);
-  
+
   const res = await db.query.orders.findMany({
-    where: status ? and(whereCondition, eq(orders.status, Number(status))) : whereCondition,
+    where: status
+      ? and(whereCondition, eq(orders.status, Number(status)))
+      : whereCondition,
     orderBy: (orders, { desc }) => [desc(orders.createdAt)],
     with: {
       items: {
@@ -109,7 +111,7 @@ const createOrderRoute = createRoute({
               z.object({
                 productId: z.number(),
                 quantity: z.number().positive(),
-              })
+              }),
             ),
           }),
         },
@@ -136,15 +138,30 @@ ordersRouter.openapi(createOrderRoute, async (c) => {
   let totalPrice = 0;
   const orderItems: any[] = [];
 
-  for (const item of items) {
-    const product = await db.query.products.findFirst({
-      where: eq(products.id, item.productId),
-    });
+  // 1. 提取所有要去查询的 ID
+  const productIds = items.map((item) => item.productId);
 
+  // 2. 一次性查询所有商品 (只与数据库交互一次)
+  // 相当于 SQL: SELECT * FROM products WHERE id IN (1, 2, 3...)
+  const foundProducts = await db.query.products.findMany({
+    where: inArray(products.id, productIds),
+  });
+
+  // 3. 构建 Map 方便快速查找 (关键步骤，避免由 O(N) 变成 O(N^2))
+  // Map 结构: { productId: ProductEntity }
+  const productMap = new Map(foundProducts.map((p) => [p.id, p]));
+
+  // 4. 在内存中进行循环验证 (速度极快)
+  for (const item of items) {
+    // 从 Map 中直接获取，不需要 await
+    const product = productMap.get(item.productId);
+
+    // 检查是否存在
     if (!product) {
       return c.json(fail(`商品 ID ${item.productId} 不存在`), 400);
     }
 
+    // 检查库存
     if (product.quantity < item.quantity) {
       return c.json(fail(`商品 ${product.name} 库存不足`), 400);
     }
@@ -164,37 +181,49 @@ ordersRouter.openapi(createOrderRoute, async (c) => {
   const orderNo = `ORD${Date.now()}${Math.random().toString(36).substring(2, 8)}`;
 
   // 创建订单
-  const [newOrder] = await db
-    .insert(orders)
-    .values({
-      userId,
-      totalPrice,
-      orderNo,
-      status: 0,
-    })
-    .returning();
+  const res = await db.transaction(async (tx) => {
+    // 1. 创建主订单
+    const [newOrder] = await tx
+      .insert(orders)
+      .values({
+        userId,
+        totalPrice,
+        orderNo,
+        status: 0,
+      })
+      .returning();
 
-  // 创建订单详情
-  for (const item of orderItems) {
-    await db.insert(orderList).values({
-      orderId: newOrder.id,
-      ...item,
-    });
+    // 2. 批量插入订单详情 (Batch Insert) - 极大的性能提升
+    if (orderItems.length > 0) {
+      const orderDetailsToInsert = orderItems.map((item) => ({
+        orderId: newOrder.id,
+        productId: item.productId,
+        quantity: item.quantity,
+        unitPrice: item.unitPrice, // 假设你有这个字段
+        totalPrice: item.totalPrice,
+      }));
 
-    // 扣减库存 - 先查询当前库存
-    const currentProduct = await db.query.products.findFirst({
-      where: eq(products.id, item.productId),
-    });
-    
-    if (currentProduct) {
-      await db
-        .update(products)
-        .set({ quantity: currentProduct.quantity - item.quantity })
-        .where(eq(products.id, item.productId));
+      await tx.insert(orderList).values(orderDetailsToInsert);
     }
-  }
 
-  return c.json(success(newOrder), 200);
+    // 3. 并行扣减库存 (利用 SQL 相对更新，无需查询)
+    // 注意：这里使用 Promise.all 让所有 update 语句同时发给数据库
+    await Promise.all(
+      orderItems.map((item) =>
+        tx
+          .update(products)
+          .set({
+            // 相当于 SQL: UPDATE products SET quantity = quantity - 5 WHERE id = ...
+            quantity: sql`${products.quantity} - ${item.quantity}`,
+          })
+          .where(eq(products.id, item.productId)),
+      ),
+    );
+
+    return newOrder;
+  });
+
+  return c.json(success(res), 200);
 });
 
 // 更新订单状态（支付、发货、收货）
