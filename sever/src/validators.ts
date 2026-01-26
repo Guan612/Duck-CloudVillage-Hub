@@ -196,6 +196,8 @@ export const insertFeedbackSchema = createInsertSchema(feedbacks, {
 }).omit({
   charge: true, // 创建反馈时，还没有负责人，所以剔除该字段
   status: true, // 创建时默认为 0，不需要传
+  lastRemindedAt: true, // 不需要传
+  remindCount: true, // 不需要传
   createdAt: true,
   updatedAt: true,
 });
