@@ -35,6 +35,7 @@ export interface Product {
 
 // ==================== 购物车相关 ====================
 export interface CartItem {
+  filter(arg0: (item: { checked: any; }) => boolean): unknown;
   id: number;
   userId: number;
   productId: number;
