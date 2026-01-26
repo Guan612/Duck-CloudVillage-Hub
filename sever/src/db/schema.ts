@@ -8,6 +8,7 @@ import {
   boolean,
   index,
   uniqueIndex,
+  jsonb,
 } from "drizzle-orm/pg-core";
 
 export const users = pgTable(
@@ -128,6 +129,9 @@ export const feedbacks = pgTable("feedbacks", {
   status: integer().notNull().default(0), //0 提出反馈，1 接待反馈，2 已处理，3 关闭反馈
   title: varchar({ length: 255 }).notNull(),
   content: text(),
+  imageUrls: jsonb(), // 存储图片URL数组（JSON字符串）
+  lastRemindedAt: timestamp("lastRemindedAt"), // 上次提醒时间
+  remindCount: integer().default(0), // 提醒次数
   createdAt: timestamp().defaultNow().notNull(),
   updatedAt: timestamp().$onUpdate(() => new Date()),
 });
@@ -137,6 +141,9 @@ export const usersRelations = relations(users, ({ many }) => ({
   articles: many(articles),
   feedbacks: many(feedbacks),
   carts: many(carts),
+  feedbackLikes: many(feedbackLikes),
+  feedbackComments: many(feedbackComments),
+  feedbackReplies: many(feedbackReplies),
 }));
 
 export const ordersRelations = relations(orders, ({ one, many }) => ({
@@ -168,4 +175,97 @@ export const cartsRelations = relations(carts, ({ one }) => ({
 
 export const productsRelations = relations(products, ({ many }) => ({
   carts: many(carts),
+}));
+
+// 反馈点赞表
+export const feedbackLikes = pgTable("feedback_likes", {
+  id: integer().primaryKey().generatedAlwaysAsIdentity(),
+  feedbackId: integer("feedbackId")
+    .references(() => feedbacks.id, { onDelete: "cascade" })
+    .notNull(),
+  userId: integer("userId")
+    .references(() => users.id, { onDelete: "cascade" })
+    .notNull(),
+  createdAt: timestamp().defaultNow().notNull(),
+}, (table) => [
+  uniqueIndex("feedback_user_like_idx").on(table.feedbackId, table.userId),
+]);
+
+// 反馈评论表（用户评论）
+export const feedbackComments = pgTable("feedback_comments", {
+  id: integer().primaryKey().generatedAlwaysAsIdentity(),
+  feedbackId: integer("feedbackId")
+    .references(() => feedbacks.id, { onDelete: "cascade" })
+    .notNull(),
+  userId: integer("userId")
+    .references(() => users.id, { onDelete: "cascade" })
+    .notNull(),
+  content: text().notNull(),
+  createdAt: timestamp().defaultNow().notNull(),
+  updatedAt: timestamp().$onUpdate(() => new Date()),
+});
+
+// 官方回复表（管理员回复）
+export const feedbackReplies = pgTable("feedback_replies", {
+  id: integer().primaryKey().generatedAlwaysAsIdentity(),
+  feedbackId: integer("feedbackId")
+    .references(() => feedbacks.id, { onDelete: "cascade" })
+    .notNull(),
+  replierId: integer("replierId") // 回复人（管理员）
+    .references(() => users.id, { onDelete: "cascade" })
+    .notNull(),
+  content: text().notNull(),
+  createdAt: timestamp().defaultNow().notNull(),
+  updatedAt: timestamp().$onUpdate(() => new Date()),
+});
+
+// 反馈点赞关系
+export const feedbackLikesRelations = relations(feedbackLikes, ({ one }) => ({
+  feedback: one(feedbacks, {
+    fields: [feedbackLikes.feedbackId],
+    references: [feedbacks.id],
+  }),
+  user: one(users, {
+    fields: [feedbackLikes.userId],
+    references: [users.id],
+  }),
+}));
+
+// 反馈评论关系
+export const feedbackCommentsRelations = relations(feedbackComments, ({ one }) => ({
+  feedback: one(feedbacks, {
+    fields: [feedbackComments.feedbackId],
+    references: [feedbacks.id],
+  }),
+  user: one(users, {
+    fields: [feedbackComments.userId],
+    references: [users.id],
+  }),
+}));
+
+// 官方回复关系
+export const feedbackRepliesRelations = relations(feedbackReplies, ({ one }) => ({
+  feedback: one(feedbacks, {
+    fields: [feedbackReplies.feedbackId],
+    references: [feedbacks.id],
+  }),
+  replier: one(users, {
+    fields: [feedbackReplies.replierId],
+    references: [users.id],
+  }),
+}));
+
+// 反馈关系
+export const feedbacksRelations = relations(feedbacks, ({ one, many }) => ({
+  giverUser: one(users, {
+    fields: [feedbacks.giver],
+    references: [users.id],
+  }),
+  chargeUser: one(users, {
+    fields: [feedbacks.charge],
+    references: [users.id],
+  }),
+  likes: many(feedbackLikes),
+  comments: many(feedbackComments),
+  replies: many(feedbackReplies),
 }));
