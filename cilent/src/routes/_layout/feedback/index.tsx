@@ -13,55 +13,26 @@ import {
   MessageSquarePlus,
   ThumbsUp,
 } from "lucide-react";
+import useFeedbacks from "@/hooks/feedback/useFeedbacks";
+import { useEffect } from "react";
 
 export const Route = createFileRoute("/_layout/feedback/")({
   component: FeedbackPage,
 });
 
-// --- 模拟数据 ---
-const FEEDBACK_LIST = [
-  {
-    id: 1,
-    user: { name: "多吉", avatar: "D" },
-    type: "infrastructure", // 基础设施
-    status: "solved",
-    title: "村口的路灯坏了三天了，晚上太黑",
-    content: "特别是下雨天，老人走路很不方便，希望能尽快派人来修一下。",
-    location: "二组村口",
-    time: "2小时前",
-    likes: 12,
-    comments: 2,
-    reply: "村委会回复：已收到反馈，电工师傅将于明天上午前往维修。",
-  },
-  {
-    id: 2,
-    user: { name: "卓玛", avatar: "Z" },
-    type: "suggestion", // 建议
-    status: "pending",
-    title: "建议在广场增加一些健身器材",
-    content: "现在的器材有点老旧了，而且数量不够，晚上大家都要排队。",
-    location: "文化广场",
-    time: "5小时前",
-    likes: 45,
-    comments: 8,
-    reply: null,
-  },
-  {
-    id: 3,
-    user: { name: "扎西", avatar: "Z" },
-    type: "policy", // 政策
-    status: "pending",
-    title: "今年的农业补贴什么时候发放？",
-    content: "想问一下关于青稞种植的补贴标准有没有变化。",
-    location: null,
-    time: "1天前",
-    likes: 5,
-    comments: 0,
-    reply: null,
-  },
-];
-
 function FeedbackPage() {
+  const {
+    feedbacks,
+    loading,
+    getFeedbackList,
+    formatRelativeTime,
+    getStatusText,
+  } = useFeedbacks();
+
+  useEffect(() => {
+    getFeedbackList();
+  }, []);
+
   return (
     <div className="min-h-screen bg-muted/20 pb-24 relative">
       {/* 1. 顶部 Header (普通流) */}
@@ -89,18 +60,6 @@ function FeedbackPage() {
               </div>
             </div>
           </Link>
-
-          {/* 下方：快捷分类 (可选) */}
-          {/* <QuickBtn
-            icon={Wrench}
-            label="设施报修"
-            color="text-blue-600 bg-blue-50"
-          />
-          <QuickBtn
-            icon={HelpCircle}
-            label="政策咨询"
-            color="text-orange-600 bg-orange-50"
-          /> */}
         </div>
       </div>
 
@@ -111,13 +70,25 @@ function FeedbackPage() {
           <div className="sticky top-0 z-10 bg-muted/20 backdrop-blur-md pt-2 pb-4 -mx-4 px-4">
             <div className="flex items-center justify-between">
               <TabsList className="bg-background/80 h-9">
-                <TabsTrigger value="all" className="text-xs">
+                <TabsTrigger
+                  value="all"
+                  className="text-xs"
+                  onClick={() => getFeedbackList()}
+                >
                   全部反馈
                 </TabsTrigger>
-                <TabsTrigger value="solved" className="text-xs">
+                <TabsTrigger
+                  value="solved"
+                  className="text-xs"
+                  onClick={() => getFeedbackList("2")}
+                >
                   已回复
                 </TabsTrigger>
-                <TabsTrigger value="my" className="text-xs">
+                <TabsTrigger
+                  value="my"
+                  className="text-xs"
+                  onClick={() => getFeedbackList()}
+                >
                   我的
                 </TabsTrigger>
               </TabsList>
@@ -134,24 +105,51 @@ function FeedbackPage() {
           </div>
 
           <TabsContent value="all" className="space-y-3 mt-0">
-            {FEEDBACK_LIST.map((item) => (
-              <FeedbackCard key={item.id} data={item} />
-            ))}
-            <div className="text-center text-xs text-muted-foreground py-6">
-              没有更多了
-            </div>
+            {loading ? (
+              <div className="py-10 text-center text-muted-foreground text-sm">
+                加载中...
+              </div>
+            ) : feedbacks.length === 0 ? (
+              <div className="py-10 text-center text-muted-foreground text-sm">
+                暂无反馈
+              </div>
+            ) : (
+              feedbacks.map((item) => (
+                <FeedbackCard key={item.id} data={item} />
+              ))
+            )}
           </TabsContent>
 
           <TabsContent value="solved">
-            <div className="py-10 text-center text-muted-foreground text-sm">
-              暂无更多已回复内容
-            </div>
+            {loading ? (
+              <div className="py-10 text-center text-muted-foreground text-sm">
+                加载中...
+              </div>
+            ) : feedbacks.filter((f) => f.hasReply).length === 0 ? (
+              <div className="py-10 text-center text-muted-foreground text-sm">
+                暂无已回复内容
+              </div>
+            ) : (
+              feedbacks
+                .filter((f) => f.hasReply)
+                .map((item) => <FeedbackCard key={item.id} data={item} />)
+            )}
           </TabsContent>
 
           <TabsContent value="my">
-            <div className="py-10 text-center text-muted-foreground text-sm">
-              您还没有提交过反馈
-            </div>
+            {loading ? (
+              <div className="py-10 text-center text-muted-foreground text-sm">
+                加载中...
+              </div>
+            ) : feedbacks.length === 0 ? (
+              <div className="py-10 text-center text-muted-foreground text-sm">
+                您还没有提交过反馈
+              </div>
+            ) : (
+              feedbacks.map((item) => (
+                <FeedbackCard key={item.id} data={item} />
+              ))
+            )}
           </TabsContent>
         </Tabs>
       </div>
@@ -168,8 +166,10 @@ function FeedbackPage() {
 }
 
 // --- 子组件：反馈卡片 ---
-function FeedbackCard({ data }: { data: (typeof FEEDBACK_LIST)[0] }) {
-  const isSolved = data.status === "solved";
+function FeedbackCard({ data }: { data: any }) {
+  const { toggleLike, formatRelativeTime, getStatusText } = useFeedbacks();
+  const statusInfo = getStatusText(data.status);
+  const isSolved = data.status === 2;
 
   return (
     <div className="bg-card rounded-xl p-4 shadow-sm border border-border/50 space-y-3">
@@ -177,24 +177,29 @@ function FeedbackCard({ data }: { data: (typeof FEEDBACK_LIST)[0] }) {
       <div className="flex items-start justify-between">
         <div className="flex items-center gap-2">
           <Avatar className="h-8 w-8">
-            <AvatarImage src="" />
+            <AvatarImage src={data.giverUser?.avatarUrl} />
             <AvatarFallback className="bg-primary/10 text-primary text-xs">
-              {data.user.avatar}
+              {data.giverUser?.nickname?.[0] || "U"}
             </AvatarFallback>
           </Avatar>
           <div>
-            <p className="text-xs font-bold">{data.user.name}</p>
-            <p className="text-[10px] text-muted-foreground">{data.time}</p>
+            <p className="text-xs font-bold">{data.giverUser?.nickname}</p>
+            <p className="text-[10px] text-muted-foreground">
+              {formatRelativeTime(data.createdAt)}
+            </p>
           </div>
         </div>
 
         {/* 状态徽标 */}
         <Badge
-          //   variant={isSolved ? "default" : "secondary"}
-          className={`text-[10px] h-5 px-1.5 gap-1 ${isSolved ? "bg-green-600 hover:bg-green-700" : "bg-orange-100 text-orange-700 hover:bg-orange-200"}`}
+          className={`text-[10px] h-5 px-1.5 gap-1 ${
+            isSolved
+              ? "bg-green-600 hover:bg-green-700"
+              : "bg-orange-100 text-orange-700 hover:bg-orange-200"
+          }`}
         >
           {isSolved ? <CheckCircle2 size={10} /> : <Clock size={10} />}
-          {isSolved ? "已回复" : "处理中"}
+          {statusInfo.text}
         </Badge>
       </div>
 
@@ -204,33 +209,50 @@ function FeedbackCard({ data }: { data: (typeof FEEDBACK_LIST)[0] }) {
         <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">
           {data.content}
         </p>
-        {/* 地点标签 */}
-        {data.location && (
-          <div className="inline-flex items-center gap-0.5 text-[10px] text-muted-foreground bg-muted px-1.5 py-0.5 rounded mt-1">
-            <MapPin size={10} />
-            {data.location}
+        {/* 图片预览 */}
+        {data.imageUrls && data.imageUrls.length > 0 && (
+          <div className="flex gap-2 mt-2">
+            {data.imageUrls.slice(0, 3).map((url: string, index: number) => (
+              <img
+                key={index}
+                src={`http://localhost:3000${url}`}
+                alt="反馈图片"
+                className="w-16 h-16 object-cover rounded-lg"
+              />
+            ))}
+            {data.imageUrls.length > 3 && (
+              <div className="w-16 h-16 bg-muted rounded-lg flex items-center justify-center text-xs text-muted-foreground">
+                +{data.imageUrls.length - 3}
+              </div>
+            )}
           </div>
         )}
       </div>
 
       {/* 官方回复区 (如果有) */}
-      {data.reply && (
+      {data.hasReply && (
         <div className="bg-muted/50 rounded-lg p-2 text-xs text-foreground/80 border-l-2 border-primary">
           <span className="font-bold text-primary mr-1">官方回复:</span>
-          {data.reply}
+          已回复
         </div>
       )}
 
       {/* 底部操作栏 */}
       <div className="flex items-center justify-between pt-2 border-t border-border/40">
         <div className="flex gap-4">
-          <button className="flex items-center gap-1 text-xs text-muted-foreground hover:text-primary transition-colors">
-            <ThumbsUp size={14} />
-            <span>{data.likes}</span>
+          <button
+            className="flex items-center gap-1 text-xs text-muted-foreground hover:text-primary transition-colors"
+            onClick={() => toggleLike(data.id)}
+          >
+            <ThumbsUp
+              size={14}
+              className={data.isLiked ? "fill-primary" : ""}
+            />
+            <span>{data.likesCount || 0}</span>
           </button>
           <button className="flex items-center gap-1 text-xs text-muted-foreground hover:text-primary transition-colors">
             <MessageCircle size={14} />
-            <span>{data.comments}</span>
+            <span>{data.commentsCount || 0}</span>
           </button>
         </div>
         <Link
