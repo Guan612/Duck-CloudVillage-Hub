@@ -67,21 +67,21 @@ cartRoter.openapi(insertUserCartRouter, async (c) => {
   const payload = c.get("jwtPayload");
   const userId = payload.userId;
   const data = c.req.valid("json");
-  const productQuantity = await db
-    .update(products)
-    .set({
-      quantity: sql`${products.quantity} - ${data.quantity}`,
-    })
-    .where(
-      and(
-        eq(products.id, data.productId),
-        gte(products.quantity, data.quantity),
-      ),
-    );
+  // const productQuantity = await db
+  //   .update(products)
+  //   .set({
+  //     quantity: sql`${products.quantity} - ${data.quantity}`,
+  //   })
+  //   .where(
+  //     and(
+  //       eq(products.id, data.productId),
+  //       gte(products.quantity, data.quantity),
+  //     ),
+  //   );
 
-  if (!productQuantity) {
-    return c.json(fail(t("cart.err.quantity")));
-  }
+  // if (!productQuantity) {
+  //   return c.json(fail(t("cart.err.quantity")));
+  // }
 
   const res = await db
     .insert(carts)
@@ -138,7 +138,7 @@ cartRoter.openapi(deletUserCartRouter, async (c) => {
 
   const res = await db
     .delete(carts)
-    .where(eq(carts.id, Number(cartId)) && eq(carts.userId, userId))
+    .where(and(eq(carts.id, Number(cartId)), eq(carts.userId, userId)))
     .returning();
 
   if (!res) {
