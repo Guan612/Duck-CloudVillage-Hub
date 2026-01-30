@@ -178,7 +178,7 @@ class Http {
 
     // 强制跳转登录页
     window.location.href =
-      "/login?redirect=" + encodeURIComponent(window.location.href);
+      "/auth/login?redirect=" + encodeURIComponent(window.location.href);
   }
 
   // --- API 暴露 ---
