@@ -29,7 +29,6 @@ function SubLayout() {
     <div className="flex h-screen w-full bg-background overflow-hidden">
       {/* 3. 侧边栏：只在 PC (md) 显示，手机隐藏 */}
       <AppSidebar className="hidden md:flex border-r" />
-
       {/* 4. 右侧内容区域：占据剩余空间 */}
       <div className="flex-1 flex flex-col h-full relative min-w-0">
         {/* --- 统一顶栏 (Header) --- */}
@@ -74,5 +73,5 @@ function SubLayout() {
         </main> */}
       </div>
     </div>
-  );
+  )
 }
