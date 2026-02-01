@@ -14,6 +14,17 @@ interface HttpConfig extends RequestInit {
   skipInterceptor?: boolean;
 }
 
+// 可选：更可控的错误类型（只在“真异常”时用）
+class HttpError extends Error {
+  status?: number;
+  bodyText?: string;
+  data?: unknown;
+  constructor(message: string, init?: Partial<HttpError>) {
+    super(message);
+    Object.assign(this, init);
+  }
+}
+
 class Http {
   // 🔒 刷新锁：防止多个请求同时触发刷新
   private isRefreshing = false;
@@ -97,24 +108,29 @@ class Http {
       }
     }
 
-    // 5. 其他错误处理
-    if (!response.ok) {
-      const errorBody = await response.text();
-      throw new Error(`HTTP Error ${response.status}: ${errorBody}`);
-    }
-
-    // 6. 返回结果
-    // 某些接口可能返回空体 (204)
+    // 5) 统一解析 body（无论 ok 还是非 ok）
     const text = await response.text();
     if (!text) {
+      // 有些接口 204/空体
       return {} as unknown as ApiResponse<T>;
     }
 
+    // 尝试 parse JSON（优先当作 ApiResponse）
+    let parsed: any = null;
     try {
-      return JSON.parse(text) as ApiResponse<T>;
+      parsed = JSON.parse(text);
     } catch {
-      return {} as unknown as ApiResponse<T>;
+      // 非 JSON 的错误体：这里再决定是否 throw
+      // 你也可以选择“包装成 ApiResponse”返回
+      throw new HttpError(`Invalid JSON response (HTTP ${response.status})`, {
+        status: response.status,
+        bodyText: text,
+      });
     }
+
+    // 6) 如果后端符合 {code,msg,data} 规范：即使 400 也直接返回，让业务层读 msg
+    // 这样你的前端就能 toast res.msg 了
+    return parsed as ApiResponse<T>;
   }
 
   // --- 辅助方法 ---
