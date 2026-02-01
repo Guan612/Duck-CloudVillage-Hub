@@ -149,7 +149,7 @@ authRouter.openapi(refreshTokenRoute, async (c) => {
       throw new Error("Invalid token type");
     }
 
-    const userId = payload.sub as number;
+    const userId = payload.userId as number;
 
     // 4. (可选但推荐) 查一下数据库，确保用户没被封号
     const res = await db.query.users.findFirst({
