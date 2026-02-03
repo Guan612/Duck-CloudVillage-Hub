@@ -7,6 +7,8 @@
     "push": "bunx drizzle-kit push"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.981.0",
+    "@aws-sdk/s3-request-presigner": "^3.981.0",
     "@hono/zod-openapi": "^1.2.0",
     "@intlify/hono": "^2.0.0",
     "@scalar/hono-api-reference": "^0.9.34",
