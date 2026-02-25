@@ -42,9 +42,14 @@ class Http {
     if (config.params) {
       const params = new URLSearchParams();
       Object.entries(config.params).forEach(([key, value]) => {
-        params.append(key, String(value));
+        if (value !== undefined && value !== null) {
+          params.append(key, String(value));
+        }
       });
-      url += `?${params.toString()}`;
+      const paramString = params.toString();
+      if (paramString) {
+        url += `?${paramString}`;
+      }
     }
 
     // 2. 动态获取最新的 Token (支持 await tauriLocalStore.get)

@@ -3,7 +3,7 @@ import type { Feedback, FeedbackComment, FeedbackReply } from "@/types/api-respo
 
 // 获取反馈列表
 export const getFeedbacksApi = (params?: { status?: string }) => {
-  return http.get<Feedback[]>("/feedback", { params });
+  return http.get<Feedback[]>("/feedback", params ? { params } : {});
 };
 
 // 获取反馈详情

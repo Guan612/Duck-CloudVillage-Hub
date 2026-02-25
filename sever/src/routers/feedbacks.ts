@@ -3,7 +3,13 @@ import { jwt } from "hono/jwt";
 import { appConfig } from "../config";
 import { db } from "../db";
 import { eq, and, desc, sql } from "drizzle-orm";
-import { feedbacks, users, feedbackLikes, feedbackComments, feedbackReplies } from "../db/schema";
+import {
+  feedbacks,
+  users,
+  feedbackLikes,
+  feedbackComments,
+  feedbackReplies,
+} from "../db/schema";
 import { insertFeedbackSchema } from "../validators";
 import { fail, success } from "../utils/result";
 import { useTranslation } from "@intlify/hono";
@@ -37,10 +43,12 @@ feedbacksRouter.openapi(listFeedbacksRoute, async (c) => {
   const payload = c.get("jwtPayload");
   const userId = payload.userId;
   const { status } = c.req.valid("query");
+  const statusNumber = status ? Number(status) : undefined;
 
-  const whereCondition = status
-    ? and(eq(feedbacks.giver, userId), eq(feedbacks.status, Number(status)))
-    : eq(feedbacks.giver, userId);
+  const whereCondition =
+    statusNumber !== undefined && !isNaN(statusNumber)
+      ? and(eq(feedbacks.giver, userId), eq(feedbacks.status, statusNumber))
+      : eq(feedbacks.giver, userId);
 
   // 获取反馈列表
   const feedbackList = await db.query.feedbacks.findMany({
@@ -74,13 +82,13 @@ feedbacksRouter.openapi(listFeedbacksRoute, async (c) => {
         .select({ count: sql<number>`count(*)` })
         .from(feedbackLikes)
         .where(eq(feedbackLikes.feedbackId, feedback.id));
-      
+
       // 获取评论数
       const commentsCountResult = await db
         .select({ count: sql<number>`count(*)` })
         .from(feedbackComments)
         .where(eq(feedbackComments.feedbackId, feedback.id));
-      
+
       // 检查是否有官方回复
       const replyCountResult = await db
         .select({ count: sql<number>`count(*)` })
@@ -93,7 +101,7 @@ feedbacksRouter.openapi(listFeedbacksRoute, async (c) => {
         commentsCount: Number(commentsCountResult[0]?.count || 0),
         hasReply: Number(replyCountResult[0]?.count || 0) > 0,
       };
-    })
+    }),
   );
 
   return c.json(success(res), 200);
@@ -152,13 +160,13 @@ feedbacksRouter.openapi(getFeedbackRoute, async (c) => {
     .select({ count: sql<number>`count(*)` })
     .from(feedbackLikes)
     .where(eq(feedbackLikes.feedbackId, feedback.id));
-  
+
   // 获取评论数
   const commentsCountResult = await db
     .select({ count: sql<number>`count(*)` })
     .from(feedbackComments)
     .where(eq(feedbackComments.feedbackId, feedback.id));
-  
+
   // 检查是否有官方回复
   const replyCountResult = await db
     .select({ count: sql<number>`count(*)` })

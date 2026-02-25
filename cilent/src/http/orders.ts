@@ -1,4 +1,4 @@
-import { OrderItem } from "@/types/api-responses";
+import { Order } from "@/types/api-responses";
 import { http } from ".";
 
 // 获取用户订单列表
@@ -15,7 +15,7 @@ export const getOrderDetailApi = (id: number) => {
 export const createOrderApi = (data: {
   items: Array<{ productId: number; quantity: number }>;
 }) => {
-  return http.post<OrderItem[]>("/order", data);
+  return http.post<Order>("/order", data);
 };
 
 // 更新订单状态

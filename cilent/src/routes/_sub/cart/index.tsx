@@ -63,15 +63,15 @@ function RouteComponent() {
                   />
                 </div>
 
-                {/* 2. 商品图片 - 固定大小 */}
-                <div className="relative h-24 w-24 flex-shrink-0 overflow-hidden rounded-lg bg-muted/50 border border-border/50">
-                  <img
-                    src={item.product.imgUrl}
-                    alt={item.product.name}
-                    className="h-full w-full object-cover"
-                    loading="lazy"
-                  />
-                </div>
+                 {/* 2. 商品图片 - 固定大小 */}
+                 <div className="relative h-24 w-24 flex-shrink-0 overflow-hidden rounded-lg bg-muted/50 border border-border/50">
+                   <img
+                     src={item.product?.imgUrl || "/placeholder.png"}
+                     alt={item.product?.name || "商品"}
+                     className="h-full w-full object-cover"
+                     loading="lazy"
+                   />
+                 </div>
 
                 {/* 3. 信息主体 (Flex Column) */}
                 <div className="flex flex-1 flex-col justify-between py-0.5 min-w-0">
@@ -79,11 +79,11 @@ function RouteComponent() {
                   <div className="flex justify-between items-start gap-2">
                     <div className="space-y-1 pr-1">
                       <h3 className="text-sm font-bold leading-tight line-clamp-2 text-foreground/90">
-                        {item.product.name}
+                        {item.product?.name || "商品名称"}
                       </h3>
                       {/* 库存/规格显示 */}
                       <p className="text-xs text-muted-foreground">
-                        库存: {item.product.quantity}
+                        库存: {item.product?.quantity || 0}
                       </p>
                     </div>
 
@@ -100,7 +100,7 @@ function RouteComponent() {
                   <div className="flex items-end justify-between mt-2">
                     {/* 价格 */}
                     <div className="font-bold text-lg text-primary tabular-nums tracking-tight">
-                      {formatPrice(item.product.price)}
+                      {formatPrice(item.product?.price || 0)}
                     </div>
 
                     {/* 数量控制器 */}
@@ -124,7 +124,7 @@ function RouteComponent() {
                         size="icon"
                         className="h-6 w-6 rounded-full hover:bg-muted text-muted-foreground hover:text-foreground"
                         onClick={() => updateQuantity(item.id, 1)}
-                        disabled={item.quantity >= item.product.quantity}
+                        disabled={item.product ? item.quantity >= item.product.quantity : true}
                       >
                         <Plus size={12} strokeWidth={2.5} />
                       </Button>

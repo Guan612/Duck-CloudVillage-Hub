@@ -1,6 +1,6 @@
 import { deleteCartItemApi, getCartApi } from "@/http/cart";
 import { createOrderApi } from "@/http/orders";
-import { CartItem, Product } from "@/types/api-responses";
+import { CartItem } from "@/types/api-responses";
 import { useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -47,7 +47,7 @@ export default function useMyCart() {
           const newQty = item.quantity + delta;
           // 限制：不能小于1，且不能超过库存(product.quantity)
           if (newQty < 1) return item;
-          if (newQty > item.product.quantity) return item;
+          if (item.product && newQty > item.product.quantity) return item;
           return { ...item, quantity: newQty };
         }
         return item;
@@ -67,7 +67,7 @@ export default function useMyCart() {
 
   const total = cartItems
     .filter((item) => !!item.checked)
-    .reduce((sum, item) => sum + item.quantity * item.product.price, 0);
+    .reduce((sum, item) => sum + item.quantity * (item.product?.price || 0), 0);
 
   const selectedCount = cartItems.filter((item) => !!item.checked).length;
   const isAllChecked =
@@ -105,7 +105,9 @@ export default function useMyCart() {
         //    建议后端加一个步骤：创建订单后 delete from carts where userId = ? and productId in (...))
 
         // B. 跳转到订单详情页或支付页 (假设路由是 /orders/$orderId)
-        await navigate({ to: `/order/${res.data.id}` });
+        if (res.data) {
+          await navigate({ to: `/order/${res.data.id}` });
+        }
       } else {
         toast.error(res.msg || "结算失败");
       }
